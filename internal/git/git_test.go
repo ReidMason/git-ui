@@ -36,6 +36,21 @@ import (
 // 	}
 // }
 
+func TestGetStaged(t *testing.T) {
+	rawStaged := `README.md
+internal/git/git.go`
+
+	result := GetStagedFiles(rawStaged)
+	expected := []string{"README.md", "internal/git/git.go"}
+
+	for i, filename := range expected {
+		resultFilename := result[i]
+		if resultFilename != filename {
+			t.Fatalf("Wrong fileaname. Expected: '%s' Got: '%s'", filename, resultFilename)
+		}
+	}
+}
+
 func TestGetDiff(t *testing.T) {
 	rawDiff := `diff --git a/git-ui/testfile.txt b/git-ui/testfile.txt
 index 35b5809..4492ac6 100644

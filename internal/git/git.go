@@ -108,3 +108,21 @@ func GetRawDiff(filepath string) string {
 
 	return strings.ReplaceAll(out.String(), "\t", "   ")
 }
+
+func GetStagedFiles(rawStaged string) []string {
+	return strings.Split(rawStaged, "\n")
+}
+
+func GetRawStaged() string {
+	cmd := exec.Command("git", "diff:", "--name-only", "--cached")
+
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+
+	if err != nil {
+		log.Fatal("Failed to get staged files")
+	}
+
+	return strings.ReplaceAll(out.String(), "\t", "   ")
+}
