@@ -55,7 +55,7 @@ func GetDiff(diffString string) Diff {
 			diff.Diff2 = append(diff.Diff2, diffLine)
 			if removals > 0 {
 				removals--
-			} else if removals == 0 {
+			} else {
 				additions++
 			}
 		} else {
