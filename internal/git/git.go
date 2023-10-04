@@ -98,9 +98,9 @@ const (
 
 type File struct {
 	Name      string
+	Files     []File
 	Directory bool
 	Status    FileStatus
-	Files     []File
 }
 
 func newFile(filename string, directory bool, status FileStatus) File {
