@@ -132,62 +132,106 @@ internal/utils/utils.go`
 
 	expected := []File{
 		{
-			Name: "internal",
+			Name:      "internal",
+			Status:    FileStatus(None),
+			Directory: true,
 			Files: []File{
 				{
-					Name: "git",
+					Name:      "git",
+					Status:    FileStatus(None),
+					Directory: true,
 					Files: []File{
 						{
-							Name: "git.go",
+							Name:      "git.go",
+							Status:    FileStatus(Staged),
+							Directory: false,
 						},
 						{
-							Name: "git_test.go",
+							Name:      "git_test.go",
+							Status:    FileStatus(Staged),
+							Directory: false,
 						},
 					},
 				},
 				{
-					Name: "utils",
+					Name:      "utils",
+					Status:    FileStatus(None),
+					Directory: true,
 					Files: []File{
 						{
-							Name: "utils.go",
+							Name:      "utils.go",
+							Status:    FileStatus(Staged),
+							Directory: false,
 						},
 					},
 				},
 			},
 		},
 		{
-			Name: "main.go",
+			Name:      "main.go",
+			Status:    FileStatus(Staged),
+			Directory: false,
 		},
 	}
 
 	// s, _ := json.MarshalIndent(result, "", "\t")
 	// t.Logf(string(s))
 
-	if result[0].Name != expected[0].Name {
-		t.Fatal("Expected first name to be internal")
+	f1 := expected[0]
+	f2 := result[0]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'internal' directory failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
 
-	if result[0].Files[0].Name != expected[0].Files[0].Name {
-		t.Fatal("Expected first name in 'internal' to be 'git'")
+	f1 = expected[0].Files[0]
+	f2 = result[0].Files[0]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'git' directory failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
 
-	if result[0].Files[0].Files[0].Name != expected[0].Files[0].Files[0].Name {
-		t.Fatal("Expected first name in 'git' to be 'git.go'")
+	f1 = expected[0].Files[0].Files[0]
+	f2 = result[0].Files[0].Files[0]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'git.go' directory failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
 
-	if result[0].Files[0].Files[1].Name != expected[0].Files[0].Files[1].Name {
-		t.Fatal("Expected second name in 'git' to be 'git_test.go'")
+	f1 = expected[0].Files[0].Files[1]
+	f2 = result[0].Files[0].Files[1]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'git_test.go' directory failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
 
-	if result[0].Files[1].Name != expected[0].Files[1].Name {
-		t.Fatal("Expected second name in 'internal' to be 'utils'")
+	f1 = expected[0].Files[1]
+	f2 = result[0].Files[1]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'utils' directory failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
 
-	if result[0].Files[1].Files[0].Name != expected[0].Files[1].Files[0].Name {
-		t.Fatal("Expected second name in 'internal' to be 'utils.go'")
+	f1 = expected[0].Files[1].Files[0]
+	f2 = result[0].Files[1].Files[0]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'utils.go' failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
 
-	if result[1].Name != expected[1].Name {
-		t.Fatal("Expected second name in 'root' to be 'main.go'")
+	f1 = expected[1]
+	f2 = result[1]
+	if !compareFile(f1, f2) {
+		t.Fatalf("File comparison for 'main.go' failed. Expected: '%v' Got: '%v'", f1, f2)
 	}
+}
+
+func compareFile(file1, file2 File) bool {
+	if file1.Name != file2.Name {
+		return false
+	}
+
+	if file1.Directory != file2.Directory {
+		return false
+	}
+
+	if file1.Status != file2.Status {
+		return false
+	}
+
+	return true
 }

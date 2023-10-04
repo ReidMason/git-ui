@@ -88,13 +88,23 @@ func GetDiff(diffString string) Diff {
 	return diff
 }
 
+type FileStatus int8
+
+const (
+	Staged DiffType = iota
+	Unstaged
+	None
+)
+
 type File struct {
-	Name  string
-	Files []File
+	Name      string
+	Directory bool
+	Status    FileStatus
+	Files     []File
 }
 
-func newFile(filename string) File {
-	return File{Name: filename, Files: make([]File, 0)}
+func newFile(filename string, directory bool, status FileStatus) File {
+	return File{Name: filename, Files: make([]File, 0), Directory: directory, Status: status}
 }
 
 func GetFiles(rawStagedFiles, rawUnstagedFiles string) []File {
@@ -102,16 +112,16 @@ func GetFiles(rawStagedFiles, rawUnstagedFiles string) []File {
 
 	stagedFilepaths := strings.Split(rawStagedFiles, "\n")
 	for _, filepath := range stagedFilepaths {
-		files = addFile(files, filepath)
+		files = addFile(files, filepath, FileStatus(Staged))
 	}
 
 	return files
 }
 
-func addFile(files []File, filepath string) []File {
+func addFile(files []File, filepath string, status FileStatus) []File {
 	if !strings.Contains(filepath, "/") {
 		log.Println("here at the file")
-		files = append(files, newFile(filepath))
+		files = append(files, newFile(filepath, false, status))
 		return files
 	}
 
@@ -122,15 +132,15 @@ func addFile(files []File, filepath string) []File {
 	added := false
 	for i, file := range files {
 		if file.Name == filename {
-			files[i].Files = addFile(file.Files, filepath)
+			files[i].Files = addFile(file.Files, filepath, status)
 			added = true
 			break
 		}
 	}
 
 	if added == false {
-		parent := newFile(filename)
-		parent.Files = addFile(parent.Files, filepath)
+		parent := newFile(filename, true, FileStatus(None))
+		parent.Files = addFile(parent.Files, filepath, status)
 		files = append(files, parent)
 	}
 
