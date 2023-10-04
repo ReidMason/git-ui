@@ -36,21 +36,6 @@ import (
 // 	}
 // }
 
-func TestGetStaged(t *testing.T) {
-	rawStaged := `README.md
-internal/git/git.go`
-
-	result := GetStagedFiles(rawStaged)
-	expected := []string{"README.md", "internal/git/git.go"}
-
-	for i, filename := range expected {
-		resultFilename := result[i]
-		if resultFilename != filename {
-			t.Fatalf("Wrong fileaname. Expected: '%s' Got: '%s'", filename, resultFilename)
-		}
-	}
-}
-
 func TestGetDiff(t *testing.T) {
 	rawDiff := `diff --git a/git-ui/testfile.txt b/git-ui/testfile.txt
 index 35b5809..4492ac6 100644
@@ -135,4 +120,74 @@ index 35b5809..4492ac6 100644
 	// if !reflect.DeepEqual(result, expected) {
 	// 	t.Fatal("Expected diff length doesn't match")
 	// }
+}
+
+func TestGetFiles(t *testing.T) {
+	rawFiles := `internal/git/git.go
+main.go
+internal/git/git_test.go
+internal/utils/utils.go`
+
+	result := GetFiles(rawFiles, "")
+
+	expected := []File{
+		{
+			Name: "internal",
+			Files: []File{
+				{
+					Name: "git",
+					Files: []File{
+						{
+							Name: "git.go",
+						},
+						{
+							Name: "git_test.go",
+						},
+					},
+				},
+				{
+					Name: "utils",
+					Files: []File{
+						{
+							Name: "utils.go",
+						},
+					},
+				},
+			},
+		},
+		{
+			Name: "main.go",
+		},
+	}
+
+	// s, _ := json.MarshalIndent(result, "", "\t")
+	// t.Logf(string(s))
+
+	if result[0].Name != expected[0].Name {
+		t.Fatal("Expected first name to be internal")
+	}
+
+	if result[0].Files[0].Name != expected[0].Files[0].Name {
+		t.Fatal("Expected first name in 'internal' to be 'git'")
+	}
+
+	if result[0].Files[0].Files[0].Name != expected[0].Files[0].Files[0].Name {
+		t.Fatal("Expected first name in 'git' to be 'git.go'")
+	}
+
+	if result[0].Files[0].Files[1].Name != expected[0].Files[0].Files[1].Name {
+		t.Fatal("Expected second name in 'git' to be 'git_test.go'")
+	}
+
+	if result[0].Files[1].Name != expected[0].Files[1].Name {
+		t.Fatal("Expected second name in 'internal' to be 'utils'")
+	}
+
+	if result[0].Files[1].Files[0].Name != expected[0].Files[1].Files[0].Name {
+		t.Fatal("Expected second name in 'internal' to be 'utils.go'")
+	}
+
+	if result[1].Name != expected[1].Name {
+		t.Fatal("Expected second name in 'root' to be 'main.go'")
+	}
 }

@@ -1,11 +1,9 @@
 package git
 
 import (
-	"bytes"
+	"git-ui/internal/utils"
 	"log"
-	"os/exec"
 	"strings"
-	"unicode/utf8"
 )
 
 type DiffType int8
@@ -45,7 +43,7 @@ func GetDiff(diffString string) Diff {
 			continue
 		}
 
-		letter, lineString := trimFirstRune(line)
+		letter, lineString := utils.TrimFirstRune(line)
 		if letter == '-' {
 			diffLine := DiffLine{Content: lineString, Type: Removal}
 			diff.Diff1 = append(diff.Diff1, diffLine)
@@ -90,39 +88,79 @@ func GetDiff(diffString string) Diff {
 	return diff
 }
 
-func trimFirstRune(s string) (rune, string) {
-	r, i := utf8.DecodeRuneInString(s)
-	return r, s[i:]
+type File struct {
+	Name  string
+	Files []File
+}
+
+func newFile(filename string) File {
+	return File{Name: filename, Files: make([]File, 0)}
+}
+
+func GetFiles(rawStagedFiles, rawUnstagedFiles string) []File {
+	files := make([]File, 0)
+
+	stagedFilepaths := strings.Split(rawStagedFiles, "\n")
+	for _, filepath := range stagedFilepaths {
+		files = addFile(files, filepath)
+	}
+
+	return files
+}
+
+func addFile(files []File, filepath string) []File {
+	if !strings.Contains(filepath, "/") {
+		log.Println("here at the file")
+		files = append(files, newFile(filepath))
+		return files
+	}
+
+	splitFilepath := strings.SplitN(filepath, "/", 2)
+	filename := splitFilepath[0]
+	filepath = splitFilepath[1]
+
+	added := false
+	for i, file := range files {
+		if file.Name == filename {
+			files[i].Files = addFile(file.Files, filepath)
+			added = true
+			break
+		}
+	}
+
+	if added == false {
+		parent := newFile(filename)
+		parent.Files = addFile(parent.Files, filepath)
+		files = append(files, parent)
+	}
+
+	return files
 }
 
 func GetRawDiff(filepath string) string {
-	cmd := exec.Command("git", "diff", "-U1000", filepath)
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	result, err := utils.RunCommand("git", "diff", "-U1000", filepath)
 
 	if err != nil {
 		log.Fatal("Failed to get git diff")
 	}
 
-	return strings.ReplaceAll(out.String(), "\t", "   ")
-}
-
-func GetStagedFiles(rawStaged string) []string {
-	return strings.Split(rawStaged, "\n")
+	return result
 }
 
 func GetRawStaged() string {
-	cmd := exec.Command("git", "diff:", "--name-only", "--cached")
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-
+	result, err := utils.RunCommand("git", "diff:", "--name-only", "--cached")
 	if err != nil {
 		log.Fatal("Failed to get staged files")
 	}
 
-	return strings.ReplaceAll(out.String(), "\t", "   ")
+	return result
+}
+
+func GetRawUnstaged() string {
+	result, err := utils.RunCommand("git", "diff:", "--name-only")
+	if err != nil {
+		log.Fatal("Failed to get unstaged files")
+	}
+
+	return result
 }
