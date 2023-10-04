@@ -47,11 +47,11 @@ func GetDiff(diffString string) Diff {
 
 		letter, lineString := trimFirstRune(line)
 		if letter == '-' {
-			diffLine := DiffLine{Content: lineString + "", Type: Removal}
+			diffLine := DiffLine{Content: lineString, Type: Removal}
 			diff.Diff1 = append(diff.Diff1, diffLine)
 			removals++
 		} else if letter == '+' {
-			diffLine := DiffLine{Content: lineString + "", Type: Addition}
+			diffLine := DiffLine{Content: lineString, Type: Addition}
 			diff.Diff2 = append(diff.Diff2, diffLine)
 			if removals > 0 {
 				removals--
