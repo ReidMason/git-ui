@@ -25,13 +25,15 @@ var (
 			Foreground(lipgloss.Color("#4b5161"))
 )
 
-type model struct {
+type Model struct {
 	ldiff     []git.DiffLine
 	rdiff     []git.DiffLine
 	lviewport viewport.Model
 	rviewport viewport.Model
-	width     int
-	ready     bool
+
+	changedFiles []git.File
+	width        int
+	ready        bool
 }
 
 func main() {
@@ -103,18 +105,33 @@ func styleDiff(diff []git.DiffLine, width int) string {
 	return diffString
 }
 
-func initModel() model {
-	return model{
-		ready: false,
+func buildFileString(file git.File, output string, i int) string {
+	output += strings.Repeat("  ", i) + "- " + file.Name + "\n"
+	i++
+	for _, f := range file.Files {
+		output = buildFileString(f, output, i)
+	}
+
+	return output
+}
+
+func initModel() Model {
+	rawStagedFiles := git.GetRawStaged()
+	rawUnstagedFiles := git.GetRawUnstaged()
+	changedFiles := git.GetFiles(rawStagedFiles, rawUnstagedFiles)
+
+	return Model{
+		changedFiles: changedFiles,
+		ready:        false,
 	}
 }
 
-func (m model) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	// Just return `nil`, which means "no I/O right now, please."
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -137,10 +154,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		height := msg.Height - columnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
+			fs := ""
+			for _, file := range m.changedFiles {
+				fs += buildFileString(file, "", 0)
+			}
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10
-			ldiff := styleDiff(m.ldiff, lineWidth)
-			m.lviewport.SetContent(ldiff)
+			// ldiff := styleDiff(m.ldiff, lineWidth)
+			m.lviewport.SetContent(fs)
 
 			m.rviewport = viewport.New(width, height)
 			m.rviewport.YPosition = 10
@@ -154,8 +175,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			columnStyle.Width(width)
 			columnStyle.Height(height)
 
-			ldiff := styleDiff(m.ldiff, lineWidth)
-			m.lviewport.SetContent(ldiff)
+			fs := ""
+			for _, file := range m.changedFiles {
+				fs += file.Name + "\n"
+			}
+
+			// ldiff := styleDiff(m.ldiff, lineWidth)
+			m.lviewport.SetContent(fs)
 
 			rdiff := styleDiff(m.rdiff, lineWidth)
 			m.rviewport.SetContent(rdiff)
@@ -177,7 +203,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m Model) View() string {
 	headerStlying := headerStyle.Width(m.width - 2)
 	header := headerStlying.Render("Git diff")
 
