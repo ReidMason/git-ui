@@ -128,7 +128,9 @@ main.go
 internal/git/git_test.go
 internal/utils/utils.go`
 
-	result := GetFiles(rawFiles, "")
+	result := GetFiles(rawFiles, `
+
+`)
 
 	expected := []File{
 		{
@@ -176,6 +178,10 @@ internal/utils/utils.go`
 
 	// s, _ := json.MarshalIndent(result, "", "\t")
 	// t.Logf(string(s))
+
+	if len(expected) != len(result) {
+		t.Fatalf("Too many root files returned. Expected: '%d' Got: '%d'", len(expected), len(result))
+	}
 
 	f1 := expected[0]
 	f2 := result[0]
@@ -230,6 +236,10 @@ func compareFile(file1, file2 File) bool {
 	}
 
 	if file1.Status != file2.Status {
+		return false
+	}
+
+	if len(file1.Files) != len(file2.Files) {
 		return false
 	}
 

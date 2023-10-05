@@ -110,9 +110,20 @@ func newFile(filename string, directory bool, status FileStatus) File {
 func GetFiles(rawStagedFiles, rawUnstagedFiles string) []File {
 	files := make([]File, 0)
 
-	stagedFilepaths := strings.Split(rawStagedFiles, "\n")
+	stagedFilepaths := strings.Split(strings.TrimSpace(rawStagedFiles), "\n")
 	for _, filepath := range stagedFilepaths {
+		if len(filepath) == 0 {
+			continue
+		}
 		files = addFile(files, filepath, FileStatus(Staged))
+	}
+
+	unstagedFilepaths := strings.Split(strings.TrimSpace(rawUnstagedFiles), "\n")
+	for _, filepath := range unstagedFilepaths {
+		if len(filepath) == 0 {
+			continue
+		}
+		files = addFile(files, filepath, FileStatus(Unstaged))
 	}
 
 	return files
@@ -120,7 +131,6 @@ func GetFiles(rawStagedFiles, rawUnstagedFiles string) []File {
 
 func addFile(files []File, filepath string, status FileStatus) []File {
 	if !strings.Contains(filepath, "/") {
-		log.Println("here at the file")
 		files = append(files, newFile(filepath, false, status))
 		return files
 	}
@@ -158,7 +168,7 @@ func GetRawDiff(filepath string) string {
 }
 
 func GetRawStaged() string {
-	result, err := utils.RunCommand("git", "diff:", "--name-only", "--cached")
+	result, err := utils.RunCommand("git", "diff", "--name-only", "--cached")
 	if err != nil {
 		log.Fatal("Failed to get staged files")
 	}
@@ -167,7 +177,7 @@ func GetRawStaged() string {
 }
 
 func GetRawUnstaged() string {
-	result, err := utils.RunCommand("git", "diff:", "--name-only")
+	result, err := utils.RunCommand("git", "diff", "--name-only")
 	if err != nil {
 		log.Fatal("Failed to get unstaged files")
 	}
