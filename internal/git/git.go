@@ -3,6 +3,7 @@ package git
 import (
 	"git-ui/internal/utils"
 	"log"
+	"path/filepath"
 	"strings"
 )
 
@@ -96,65 +97,111 @@ const (
 	None
 )
 
+const (
+	Changed   = '1'
+	Copied    = '2'
+	Unmerged  = 'u'
+	Untracked = '?'
+)
+
+type Directory struct {
+	Name        string
+	Files       []File
+	Directories []Directory
+}
+
+func newDirectory(name string) Directory {
+	return Directory{Name: name, Files: make([]File, 0), Directories: make([]Directory, 0)}
+}
+
+func (d *Directory) IsStaged() bool {
+	for _, file := range d.Files {
+		if !file.IsFullyStaged() {
+			return false
+		}
+	}
+
+	for _, directory := range d.Directories {
+		if !directory.IsStaged() {
+			return false
+		}
+	}
+
+	return true
+}
+
 type File struct {
-	Name      string
-	Files     []File
-	Directory bool
-	Status    FileStatus
+	Name           string
+	Dirpath        string
+	IndexStatus    rune
+	WorkTreeStatus rune
 }
 
-func newFile(filename string, directory bool, status FileStatus) File {
-	return File{Name: filename, Files: make([]File, 0), Directory: directory, Status: status}
+func (f *File) IsFullyStaged() bool {
+	return f.WorkTreeStatus == '.'
 }
 
-func GetFiles(rawStagedFiles, rawUnstagedFiles string) []File {
-	files := make([]File, 0)
+func newFile(filePath string, indexStatus, workTreeStatus rune) File {
+	dirpath, filename := filepath.Split(filePath)
+	dirpath = filepath.Clean(dirpath)
 
-	stagedFilepaths := strings.Split(strings.TrimSpace(rawStagedFiles), "\n")
-	for _, filepath := range stagedFilepaths {
-		if len(filepath) == 0 {
-			continue
-		}
-		files = addFile(files, filepath, FileStatus(Staged))
-	}
-
-	unstagedFilepaths := strings.Split(strings.TrimSpace(rawUnstagedFiles), "\n")
-	for _, filepath := range unstagedFilepaths {
-		if len(filepath) == 0 {
-			continue
-		}
-		files = addFile(files, filepath, FileStatus(Unstaged))
-	}
-
-	return files
+	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorkTreeStatus: workTreeStatus}
 }
 
-func addFile(files []File, filepath string, status FileStatus) []File {
-	if !strings.Contains(filepath, "/") {
-		files = append(files, newFile(filepath, false, status))
-		return files
+func GetStatus(rawStatus string) Directory {
+	lines := strings.Split(rawStatus, "\n")
+
+	// First four lines are branch data so skip them for now
+	lines = lines[4:]
+
+	directory := newDirectory("Root")
+
+	for _, line := range lines {
+		changeType, line := utils.TrimFirstRune(line)
+		line = strings.TrimSpace(line)
+
+		if changeType == Changed {
+			file := parseChangedLine(line)
+			directory = addFile(directory, strings.Split(file.Dirpath, "/"), file)
+		}
+		//   else if changeType == Copied {
+		//
+		// } else if changeType == Unmerged {
+		//
+		// } else if changeType == Untracked {
+		//
+		// }
 	}
 
-	splitFilepath := strings.SplitN(filepath, "/", 2)
-	filename := splitFilepath[0]
-	filepath = splitFilepath[1]
+	return directory
+}
 
-	added := false
-	for i, file := range files {
-		if file.Name == filename {
-			files[i].Files = addFile(file.Files, filepath, status)
-			added = true
-			break
+func parseChangedLine(line string) File {
+	sections := strings.Split(line, " ")
+
+	statusIndicators := []rune(sections[0])
+
+	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
+}
+
+func addFile(directory Directory, dirpath []string, newFile File) Directory {
+	if len(dirpath) == 0 || dirpath[0] == "." {
+		directory.Files = append(directory.Files, newFile)
+		return directory
+	}
+
+	for i, subdir := range directory.Directories {
+		if subdir.Name == dirpath[0] {
+			directory.Directories[i] = addFile(subdir, dirpath[1:], newFile)
+			return directory
 		}
 	}
 
-	if added == false {
-		parent := newFile(filename, true, FileStatus(None))
-		parent.Files = addFile(parent.Files, filepath, status)
-		files = append(files, parent)
-	}
+	newDir := newDirectory(dirpath[0])
+	newDir = addFile(newDir, dirpath[1:], newFile)
+	directory.Directories = append(directory.Directories, newDir)
 
-	return files
+	return directory
 }
 
 func GetRawDiff(filepath string) string {
@@ -167,19 +214,10 @@ func GetRawDiff(filepath string) string {
 	return result
 }
 
-func GetRawStaged() string {
-	result, err := utils.RunCommand("git", "diff", "--name-only", "--cached")
+func GetRawStatus() string {
+	result, err := utils.RunCommand("git", "status", "-u", "--porcelain=v2", "--branch")
 	if err != nil {
-		log.Fatal("Failed to get staged files")
-	}
-
-	return result
-}
-
-func GetRawUnstaged() string {
-	result, err := utils.RunCommand("git", "diff", "--name-only")
-	if err != nil {
-		log.Fatal("Failed to get unstaged files")
+		log.Fatal("Failed to get git status")
 	}
 
 	return result

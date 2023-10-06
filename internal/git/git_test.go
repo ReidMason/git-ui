@@ -122,126 +122,72 @@ index 35b5809..4492ac6 100644
 	// }
 }
 
-func TestGetFiles(t *testing.T) {
-	rawFiles := `internal/git/git.go
-main.go
-internal/git/git_test.go
-internal/utils/utils.go`
+func TestGetStatus(t *testing.T) {
+	rawStatus := `# branch.oid c86e7ed35f16570194c2308a2f8cb53155d0440d
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +0 -0
+1 .M N... 100644 100644 100644 51d742a142700c40e5d5d4915b44da5d238bef81 51d742a142700c40e5d5d4915b44da5d238bef81 internal/git/git.go
+1 .M N... 100644 100644 100644 8508f049bcb61d4c52d92e5a4c9a71051f00bcba 8508f049bcb61d4c52d92e5a4c9a71051f00bcba internal/git/git_test.go
+1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
+? internal/styling/styling.go`
 
-	result := GetFiles(rawFiles, `
+	result := GetStatus(rawStatus)
 
-`)
-
-	expected := []File{
-		{
-			Name:      "internal",
-			Status:    FileStatus(None),
-			Directory: true,
-			Files: []File{
-				{
-					Name:      "git",
-					Status:    FileStatus(None),
-					Directory: true,
-					Files: []File{
-						{
-							Name:      "git.go",
-							Status:    FileStatus(Staged),
-							Directory: false,
-						},
-						{
-							Name:      "git_test.go",
-							Status:    FileStatus(Staged),
-							Directory: false,
-						},
-					},
-				},
-				{
-					Name:      "utils",
-					Status:    FileStatus(None),
-					Directory: true,
-					Files: []File{
-						{
-							Name:      "utils.go",
-							Status:    FileStatus(Staged),
-							Directory: false,
-						},
-					},
-				},
+	expected := Directory{
+		Name: "Root",
+		Files: []File{
+			{
+				Name:           "main.go",
+				Dirpath:        ".",
+				IndexStatus:    77,
+				WorkTreeStatus: 46,
 			},
 		},
-		{
-			Name:      "main.go",
-			Status:    FileStatus(Staged),
-			Directory: false,
+		Directories: []Directory{
+			{
+				Name: "internal",
+				Directories: []Directory{
+					{
+						Name:        "git",
+						Directories: make([]Directory, 0),
+						Files: []File{
+							{
+								Name:           "git.go",
+								Dirpath:        "internal/git",
+								IndexStatus:    46,
+								WorkTreeStatus: 77,
+							},
+							{
+								Name:           "git_test.go",
+								Dirpath:        "internal/git",
+								IndexStatus:    46,
+								WorkTreeStatus: 77,
+							},
+						},
+					},
+				},
+				Files: make([]File, 0),
+			},
+			// {
+			// 	Name:        "styling",
+			// 	Directories: nil,
+			// 	Files: []File{
+			// 		{
+			// 			Name:           "styling.go",
+			// 			Dirpath:        "internal/styling",
+			// 			IndexStatus:    46,
+			// 			WorkTreeStatus: 77,
+			// 		},
+			// 	},
+			// },
 		},
 	}
 
 	// s, _ := json.MarshalIndent(result, "", "\t")
 	// t.Logf(string(s))
 
-	if len(expected) != len(result) {
-		t.Fatalf("Too many root files returned. Expected: '%d' Got: '%d'", len(expected), len(result))
+	if !cmp.Equal(result, expected) {
+		t.Fatal("Wrong file path output")
 	}
-
-	f1 := expected[0]
-	f2 := result[0]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'internal' directory failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-
-	f1 = expected[0].Files[0]
-	f2 = result[0].Files[0]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'git' directory failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-
-	f1 = expected[0].Files[0].Files[0]
-	f2 = result[0].Files[0].Files[0]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'git.go' directory failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-
-	f1 = expected[0].Files[0].Files[1]
-	f2 = result[0].Files[0].Files[1]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'git_test.go' directory failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-
-	f1 = expected[0].Files[1]
-	f2 = result[0].Files[1]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'utils' directory failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-
-	f1 = expected[0].Files[1].Files[0]
-	f2 = result[0].Files[1].Files[0]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'utils.go' failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-
-	f1 = expected[1]
-	f2 = result[1]
-	if !compareFile(f1, f2) {
-		t.Fatalf("File comparison for 'main.go' failed. Expected: '%v' Got: '%v'", f1, f2)
-	}
-}
-
-func compareFile(file1, file2 File) bool {
-	if file1.Name != file2.Name {
-		return false
-	}
-
-	if file1.Directory != file2.Directory {
-		return false
-	}
-
-	if file1.Status != file2.Status {
-		return false
-	}
-
-	if len(file1.Files) != len(file2.Files) {
-		return false
-	}
-
-	return true
 }
