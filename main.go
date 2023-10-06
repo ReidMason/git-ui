@@ -45,7 +45,7 @@ func buildDirectoryString(directory git.Directory, i int) string {
 
 		line := prefix + directory.Name
 		style := styling.StyleDirectoryLine(directory)
-		output = style.Render(line+"\r") + "\n"
+		output = style.Render(line) + "\n"
 	}
 	i++
 

@@ -23,7 +23,7 @@ var (
 )
 
 func StyleDirectoryLine(directory git.Directory) lipgloss.Style {
-	style := lipgloss.NewStyle().Background(lipgloss.Color("62"))
+	style := lipgloss.NewStyle()
 
 	if directory.IsStaged() {
 		style = style.Foreground(lipgloss.Color("#49b543"))
