@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"git-ui/internal/git"
+	"git-ui/internal/styling"
 	"os"
 	"strings"
 
@@ -11,29 +12,16 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var (
-	columnStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("62"))
-
-	headerStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("62")).
-			Align(lipgloss.Position(0.5))
-
-	greyOutStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#4b5161"))
-)
-
 type Model struct {
-	ldiff     []git.DiffLine
+	ldiff []git.DiffLine
+
 	rdiff     []git.DiffLine
 	lviewport viewport.Model
 	rviewport viewport.Model
 
-	changedFiles []git.File
-	width        int
-	ready        bool
+	gitStatus git.Directory
+	width     int
+	ready     bool
 }
 
 func main() {
@@ -49,80 +37,39 @@ func main() {
 	}
 }
 
-func styleLine(line git.DiffLine, width int) string {
-	lineString := line.Content[:min(width-7, len(line.Content))]
+func buildDirectoryString(directory git.Directory, i int) string {
+	output := ""
+	// Exclude the first level
+	if i > 0 {
+		prefix := strings.Repeat(" ", i) + "- "
 
-	additionStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#3f534f")).
-		Width(width)
-
-	removalStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#6f2e2d")).
-		Width(width)
-
-	blankStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#31343b")).
-		Width(width)
-
-	if line.Type == git.Removal {
-		lineString = removalStyle.Render(lineString)
-	} else if line.Type == git.Addition {
-		lineString = additionStyle.Render(lineString)
-	} else if line.Type == git.Blank {
-		lineString = blankStyle.Render(lineString)
+		line := prefix + directory.Name
+		style := styling.StyleDirectoryLine(directory)
+		output = style.Render(line+"\r") + "\n"
 	}
-
-	return lineString
-}
-
-func styleDiff(diff []git.DiffLine, width int) string {
-	diffString := ""
-	count := 1
-
-	numberOfLines := 0
-	for _, line := range diff {
-		if line.Type != git.Blank {
-			numberOfLines++
-		}
-	}
-	lineNumberPadding := len(fmt.Sprint(numberOfLines))
-
-	for _, line := range diff {
-		// TODO: This line number padding is probably really slow it could do with improving
-		isBlank := line.Type == git.Blank
-		lineNumber := strings.Repeat(" ", lineNumberPadding)
-		if !isBlank {
-			lengthOfCurrentNumber := len(fmt.Sprint(count))
-			lineNumber = strings.Repeat(" ", lineNumberPadding-lengthOfCurrentNumber)
-			lineNumber += fmt.Sprint(count)
-			count++
-		}
-		lineNumber += "│"
-
-		diffString += greyOutStyle.Render(lineNumber) + styleLine(line, width) + "\n"
-	}
-
-	return diffString
-}
-
-func buildFileString(file git.File, output string, i int) string {
-	output += strings.Repeat("  ", i) + "- " + file.Name + "\n"
 	i++
-	for _, f := range file.Files {
-		output = buildFileString(f, output, i)
+
+	for _, subDirectory := range directory.Directories {
+		output += buildDirectoryString(subDirectory, i)
+	}
+
+	prefix := strings.Repeat(" ", i) + "- "
+	for _, f := range directory.Files {
+		line := prefix + string(f.IndexStatus) + string(f.WorkTreeStatus) + " " + f.Name
+		style := styling.StyleFileLine(f)
+		output += style.Render(line) + "\n"
 	}
 
 	return output
 }
 
 func initModel() Model {
-	rawStagedFiles := git.GetRawStaged()
-	rawUnstagedFiles := git.GetRawUnstaged()
-	changedFiles := git.GetFiles(rawStagedFiles, rawUnstagedFiles)
+	rawStatus := git.GetRawStatus()
+	gitStatus := git.GetStatus(rawStatus)
 
 	return Model{
-		changedFiles: changedFiles,
-		ready:        false,
+		gitStatus: gitStatus,
+		ready:     false,
 	}
 }
 
@@ -150,14 +97,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		offset := 2
 		m.width = msg.Width
 		width := m.width/2 - offset
-		lineWidth := width - columnStyle.GetHorizontalPadding()
-		height := msg.Height - columnStyle.GetVerticalPadding() - 5
+		lineWidth := width - styling.ColumnStyle.GetHorizontalPadding()
+		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
-			fs := ""
-			for _, file := range m.changedFiles {
-				fs += buildFileString(file, "", 0)
-			}
+			fs := buildDirectoryString(m.gitStatus, 0)
+
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10
 			// ldiff := styleDiff(m.ldiff, lineWidth)
@@ -166,24 +111,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.rviewport = viewport.New(width, height)
 			m.rviewport.YPosition = 10
 
-			rdiff := styleDiff(m.rdiff, lineWidth)
+			rdiff := styling.StyleDiff(m.rdiff, lineWidth)
 			m.rviewport.SetContent(rdiff)
 
-			columnStyle.Width(width)
+			styling.ColumnStyle.Width(width)
 			m.ready = true
 		} else {
-			columnStyle.Width(width)
-			columnStyle.Height(height)
+			styling.ColumnStyle.Width(width)
+			styling.ColumnStyle.Height(height)
 
-			fs := ""
-			for _, file := range m.changedFiles {
-				fs += file.Name + "\n"
-			}
+			// fs := ""
+			// for _, file := range m.gitStatus {
+			// 	fs += file.Name + "\n"
+			// }
 
 			// ldiff := styleDiff(m.ldiff, lineWidth)
-			m.lviewport.SetContent(fs)
+			// m.lviewport.SetContent(fs)
 
-			rdiff := styleDiff(m.rdiff, lineWidth)
+			rdiff := styling.StyleDiff(m.rdiff, lineWidth)
 			m.rviewport.SetContent(rdiff)
 
 			m.lviewport.Width = width
@@ -204,11 +149,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	headerStlying := headerStyle.Width(m.width - 2)
+	headerStlying := styling.HeaderStyle.Width(m.width - 2)
 	header := headerStlying.Render("Git diff")
 
-	leftView := columnStyle.Render(m.lviewport.View())
-	rightView := columnStyle.Render(m.rviewport.View())
+	leftView := styling.ColumnStyle.Render(m.lviewport.View())
+	rightView := styling.ColumnStyle.Render(m.rviewport.View())
 
 	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, leftView, rightView)
 
