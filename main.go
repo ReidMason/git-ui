@@ -65,19 +65,19 @@ func buildFileTree(directory *git.Directory, fileTree []filetree.FileTreeLine, d
 	return fileTree
 }
 
-func buildFileTreeString(fileTree []filetree.FileTreeLine) string {
-	output := ""
+func buildFileTreeString(fileTree []filetree.FileTreeLine) []string {
+	output := make([]string, 0)
 	for i := 1; i < len(fileTree); i++ {
 		line := fileTree[i]
-
-		if !line.Item.IsExpanded() {
-			i += line.Item.Children()
-		}
 
 		prefix := strings.Repeat(" ", line.Depth) + "-"
 		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
 		style := styling.StyleFileTreeLine(line.Item)
-		output += style.Render(lineString) + "\n"
+		output = append(output, style.Render(lineString))
+
+		if !line.Item.IsExpanded() {
+			i += line.Item.Children()
+		}
 	}
 
 	return output
@@ -111,8 +111,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
-			// fs := buildDirectoryString(m.gitStatus, m.fileLine, 0)
-			fs := buildFileTreeString(m.fileTree)
+			lines := buildFileTreeString(m.fileTree)
+			fs := filetree.Render(lines)
 
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10
