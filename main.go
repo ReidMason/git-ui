@@ -80,7 +80,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds []tea.Cmd
 	)
 
-	lineWidth := m.width - styling.ColumnStyle.GetHorizontalPadding()
+	availableWidth := m.width
+	columnWidth := availableWidth / 12
+	twoCol := columnWidth * 4
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -92,42 +94,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		offset := 2
 		m.width = msg.Width
-		width := m.width/2 - offset
-		lineWidth = width - styling.ColumnStyle.GetHorizontalPadding()
-		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
+		availableWidth := m.width
+		columnWidth := availableWidth / 12
+		twoCol = columnWidth * 5
+
+		height := msg.Height - styling.ColumnStyle.GetHeight() - 5
 
 		if !m.ready {
 
-			m.lviewport = viewport.New(width, height)
+			m.lviewport = viewport.New(twoCol, height)
+			m.lviewport.Style = styling.ColumnStyle.Copy()
 			m.lviewport.YPosition = 10
 
-			m.rviewport = viewport.New(width, height)
+			m.rviewport = viewport.New(twoCol, height)
+			m.rviewport.Style = styling.ColumnStyle.Copy()
 			m.rviewport.YPosition = 10
 
 			newFiletree, newCmd := m.fileTree.Update(msg)
-			m.updateFiletree(newFiletree, lineWidth)
+			m.updateFiletree(newFiletree, twoCol)
 			cmds = append(cmds, newCmd)
-
-			styling.ColumnStyle.Width(width)
 			m.ready = true
 		} else {
-			styling.ColumnStyle.Width(width)
-			styling.ColumnStyle.Height(height)
+			m.UpdateDiffDisplay(twoCol)
 
-			m.UpdateDiffDisplay(lineWidth)
-
-			m.lviewport.Width = width
+			m.lviewport.Width = twoCol
 			m.lviewport.Height = height
 
-			m.rviewport.Width = width
+			m.rviewport.Width = twoCol
 			m.rviewport.Height = height
 		}
 	}
 
 	newFiletree, newCmd := m.fileTree.Update(msg)
-	m.updateFiletree(newFiletree, lineWidth)
+	m.updateFiletree(newFiletree, twoCol)
 	cmds = append(cmds, newCmd)
 
 	m.lviewport, cmd = m.lviewport.Update(msg)
@@ -140,14 +140,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	headerStlying := styling.HeaderStyle.Width(m.width - 10)
-	header := headerStlying.Render("Git diff")
+	headerStlying := styling.HeaderStyle.Width(m.width - 2)
+	header := headerStlying.Render("Git-UI")
 
-	fileTree := m.fileTree.Render()
-	leftDiff := styling.ColumnStyle.Render(m.lviewport.View())
-	rightDiff := styling.ColumnStyle.Render(m.rviewport.View())
+	leftDiff := m.lviewport.View()
+	rightDiff := m.rviewport.View()
+	diffView := lipgloss.JoinHorizontal(lipgloss.Left, leftDiff, rightDiff)
 
-	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, leftDiff, rightDiff)
+	columnWidth := m.width / 12
+	fileTreeStyle := lipgloss.NewStyle().MaxWidth(columnWidth * 2)
+	fileTree := styling.ColumnStyle.Render(fileTreeStyle.Render(m.fileTree.Render()))
+
+	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, diffView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, mainBody)
 }

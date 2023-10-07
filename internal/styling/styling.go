@@ -26,23 +26,23 @@ func StyleLine(line git.DiffLine, width int) string {
 	lineString := line.Content
 
 	additionStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#3f534f")).
-		Width(width)
+		ColorWhitespace(true).
+		Background(lipgloss.Color("#3f534f"))
 
 	removalStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#6f2e2d")).
-		Width(width)
+		ColorWhitespace(true).
+		Background(lipgloss.Color("#6f2e2d"))
 
 	blankStyle := lipgloss.NewStyle().
-		Background(lipgloss.Color("#31343b")).
-		Width(width)
+		ColorWhitespace(true).
+		Background(lipgloss.Color("#31343b"))
 
 	if line.Type == git.Removal {
-		lineString = removalStyle.Render(lineString)
+		lineString = removalStyle.Render(lipgloss.PlaceHorizontal(width, lipgloss.Left, lineString))
 	} else if line.Type == git.Addition {
-		lineString = additionStyle.Render(lineString)
+		lineString = additionStyle.Render(lipgloss.PlaceHorizontal(width, lipgloss.Left, lineString))
 	} else if line.Type == git.Blank {
-		lineString = blankStyle.Render(lineString)
+		lineString = blankStyle.Render(lipgloss.PlaceHorizontal(width, lipgloss.Left, lineString))
 	}
 
 	return lineString
