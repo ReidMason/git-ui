@@ -35,6 +35,7 @@ func initModel() Model {
 1 .M N... 100644 100644 100644 51d742a142700c40e5d5d4915b44da5d238bef81 51d742a142700c40e5d5d4915b44da5d238bef81 internal/git/git.go
 1 .M N... 100644 100644 100644 8508f049bcb61d4c52d92e5a4c9a71051f00bcba 8508f049bcb61d4c52d92e5a4c9a71051f00bcba internal/git/git_test.go
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
+1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
 ? internal/styling/styling.go`
 	gitStatus := git.GetStatus(rawStatus)
 	fileTree := filetree.New(&gitStatus)
@@ -74,13 +75,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
-			lines := m.fileTree.BuildFileTreeString()
-			fs := filetree.Render(lines)
+			// fs := m.fileTree.Render()
 
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10
 			// ldiff := styleDiff(m.ldiff, lineWidth)
-			m.lviewport.SetContent(fs)
+			// m.lviewport.SetContent(fs)
 
 			m.rviewport = viewport.New(width, height)
 			m.rviewport.YPosition = 10
@@ -94,6 +94,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			styling.ColumnStyle.Width(width)
 			styling.ColumnStyle.Height(height)
 
+			// fs := m.fileTree.Render()
+			// m.lviewport.SetContent(fs)
 			// fs := ""
 			// for _, file := range m.gitStatus {
 			// 	fs += file.Name + "\n"
@@ -113,6 +115,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	m.fileTree, cmd = m.fileTree.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.lviewport, cmd = m.lviewport.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -126,7 +131,8 @@ func (m Model) View() string {
 	headerStlying := styling.HeaderStyle.Width(m.width - 2)
 	header := headerStlying.Render("Git diff")
 
-	leftView := styling.ColumnStyle.Render(m.lviewport.View())
+	// leftView := styling.ColumnStyle.Render(m.lviewport.View())
+	leftView := m.fileTree.Render()
 	rightView := styling.ColumnStyle.Render(m.rviewport.View())
 
 	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, leftView, rightView)

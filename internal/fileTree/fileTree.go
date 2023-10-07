@@ -4,6 +4,8 @@ import (
 	"git-ui/internal/git"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -39,10 +41,68 @@ func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
 
 type FileTree struct {
 	fileTreeLines []FileTreeLine
+	currentLine   int
 }
 
 func New(directory *git.Directory) FileTree {
-	return FileTree{fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1)}
+	return FileTree{
+		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1),
+		currentLine:   0,
+	}
+}
+
+func (ft FileTree) Update(msg tea.Msg) (FileTree, tea.Cmd) {
+	var cmd tea.Cmd
+	ft, cmd = ft.updateAsModel(msg)
+	return ft, cmd
+}
+
+func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
+	var cmd tea.Cmd
+
+	downKeymap := key.NewBinding(
+		key.WithKeys("down", "j"),
+		key.WithHelp("down/j", "Down"),
+	)
+
+	upKeymap := key.NewBinding(
+		key.WithKeys("up", "k"),
+		key.WithHelp("up/k", "Up"),
+	)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, downKeymap):
+			ft.cursorDown()
+		case key.Matches(msg, upKeymap):
+			ft.cursorUp()
+		}
+	}
+
+	return ft, cmd
+}
+
+func (ft FileTree) getDisplayedLines() int {
+	count := -1
+	for i := 1; i < len(ft.fileTreeLines); i++ {
+		line := ft.fileTreeLines[i]
+		if !line.Item.IsExpanded() {
+			i += line.Item.Children()
+		}
+
+		count++
+	}
+
+	return count
+}
+
+func (ft *FileTree) cursorDown() {
+	ft.currentLine = min(ft.currentLine+1, ft.getDisplayedLines())
+}
+
+func (ft *FileTree) cursorUp() {
+	ft.currentLine = max(ft.currentLine-1, 0)
 }
 
 func newFileTreeLines(directory *git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
@@ -61,12 +121,12 @@ func newFileTreeLines(directory *git.Directory, fileTree []FileTreeLine, depth i
 	return fileTree
 }
 
-func Render(lines []string) string {
+func (ft FileTree) Render() string {
+	lines := ft.buildFileTreeString()
 	output := ""
-	activeLine := 0
 
 	for i, line := range lines {
-		if i == activeLine {
+		if i == ft.currentLine {
 			output += "> "
 		} else {
 			output += "  "
@@ -77,7 +137,7 @@ func Render(lines []string) string {
 	return output
 }
 
-func (ft FileTree) BuildFileTreeString() []string {
+func (ft FileTree) buildFileTreeString() []string {
 	output := make([]string, 0)
 	for i := 1; i < len(ft.fileTreeLines); i++ {
 		line := ft.fileTreeLines[i]
