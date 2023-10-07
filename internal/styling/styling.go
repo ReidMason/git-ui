@@ -23,7 +23,7 @@ var (
 )
 
 func StyleLine(line git.DiffLine, width int) string {
-	lineString := line.Content[:min(max(width-7, 0), len(line.Content))]
+	lineString := line.Content
 
 	additionStyle := lipgloss.NewStyle().
 		Background(lipgloss.Color("#3f534f")).
