@@ -26,15 +26,6 @@ type Model struct {
 
 func initModel() Model {
 	rawStatus := git.GetRawStatus()
-	// 	rawStatus = `# branch.oid d2ca38080c8a408cd3b4824d64237b8875acf98e
-	// # branch.head main
-	// # branch.upstream origin/main
-	// # branch.ab +0 -0
-	// 1 .M N... 100644 100644 100644 0a46fa61504b531ca53005dee44cc0b1cd6ffc99 0a46fa61504b531ca53005dee44cc0b1cd6ffc99 internal/fileTree/fileTree.go
-	// 1 .M N... 100644 100644 100644 2107e7a49e44e0f97915bb523729889d9578a612 2107e7a49e44e0f97915bb523729889d9578a612 internal/git/git.go
-	// 1 .M N... 100644 100644 100644 eba8c5554a26db93531ce2c90b34da40f86f887f eba8c5554a26db93531ce2c90b34da40f86f887f internal/git/git_test.go
-	// 1 .M N... 100644 100644 100644 c789db6decaa4c7af3d5eb2214aea59f430dd5b1 c789db6decaa4c7af3d5eb2214aea59f430dd5b1 internal/utils/utils.go
-	// 1 .M N... 100644 100644 100644 587b38dd887ed1cdd4fd9f45819f1e9f9d3ceca6 587b38dd887ed1cdd4fd9f45819f1e9f9d3ceca6 main.go`
 	gitStatus := git.GetStatus(rawStatus)
 	fileTree := filetree.New(gitStatus)
 
@@ -99,17 +90,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		columnWidth := availableWidth / 12
 		twoCol = columnWidth * 5
 
-		height := msg.Height - styling.ColumnStyle.GetHeight() - 5
+		height := msg.Height - styling.ColumnStyle.GetHeight() - 3
 
 		if !m.ready {
-
 			m.lviewport = viewport.New(twoCol, height)
 			m.lviewport.Style = styling.ColumnStyle.Copy()
-			m.lviewport.YPosition = 10
 
 			m.rviewport = viewport.New(twoCol, height)
 			m.rviewport.Style = styling.ColumnStyle.Copy()
-			m.rviewport.YPosition = 10
 
 			newFiletree, newCmd := m.fileTree.Update(msg)
 			m.updateFiletree(newFiletree, twoCol)
@@ -140,19 +128,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	takenWidth := m.lviewport.Width * 2
 	headerStlying := styling.HeaderStyle.Width(m.width - 2)
-	header := headerStlying.Render("Git-UI")
+	header := headerStlying.Render("Git-UI" + " " + fmt.Sprint(m.lviewport.Width) + " " + fmt.Sprint(m.width))
 
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
 	diffView := lipgloss.JoinHorizontal(lipgloss.Left, leftDiff, rightDiff)
 
-	columnWidth := m.width / 12
-	fileTreeStyle := lipgloss.NewStyle().MaxWidth(columnWidth * 2)
+	width := m.width - takenWidth - styling.ColumnStyle.GetHorizontalBorderSize()
+	fileTreeStyle := lipgloss.NewStyle().MaxWidth(width)
 	fileTreeString := fileTreeStyle.Render(m.fileTree.Render())
-	fileTreeStyle = styling.ColumnStyle.Copy().Width(columnWidth * 2)
+	// fileTreeStyle := styling.ColumnStyle.Copy().Width(m.width - takenWidth)
 
-	fileTree := fileTreeStyle.Render(fileTreeString)
+	fileTree := styling.ColumnStyle.Copy().Width(width).Render(fileTreeString)
 
 	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, diffView)
 

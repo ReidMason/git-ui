@@ -150,6 +150,7 @@ func (ft FileTree) Render() string {
 	output := ""
 
 	for i, line := range lines {
+
 		if i == ft.currentLine {
 			output += "> "
 		} else {
