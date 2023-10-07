@@ -242,10 +242,14 @@ func addFile(directory Directory, dirpath []string, newFile File) Directory {
 }
 
 func GetRawDiff(filepath string) string {
-	result, err := utils.RunCommand("git", "diff", "-U1000", filepath)
+	args := []string{"diff", "-U1000", "--"}
+	// If it's new we want to add /dev/null instead
+	args = append(args, filepath)
+
+	result, err := utils.RunCommand("git", args...)
 
 	if err != nil {
-		log.Fatal("Failed to get git diff")
+		log.Fatal("Failed to get git diff", err)
 	}
 
 	return result
