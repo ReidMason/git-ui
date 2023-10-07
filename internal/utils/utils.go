@@ -9,6 +9,7 @@ import (
 
 func TrimFirstRune(s string) (rune, string) {
 	r, i := utf8.DecodeRuneInString(s)
+
 	return r, s[i:]
 }
 

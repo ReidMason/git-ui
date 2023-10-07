@@ -1,6 +1,7 @@
 package git
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -129,6 +130,7 @@ func TestGetStatus(t *testing.T) {
 # branch.ab +0 -0
 1 .M N... 100644 100644 100644 51d742a142700c40e5d5d4915b44da5d238bef81 51d742a142700c40e5d5d4915b44da5d238bef81 internal/git/git.go
 1 .M N... 100644 100644 100644 8508f049bcb61d4c52d92e5a4c9a71051f00bcba 8508f049bcb61d4c52d92e5a4c9a71051f00bcba internal/git/git_test.go
+1 .M N... 100644 100644 100644 c789db6decaa4c7af3d5eb2214aea59f430dd5b1 c789db6decaa4c7af3d5eb2214aea59f430dd5b1 internal/utils/utils.go
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
 ? internal/styling/styling.go`
 
@@ -140,8 +142,8 @@ func TestGetStatus(t *testing.T) {
 			{
 				Name:           "main.go",
 				Dirpath:        ".",
-				IndexStatus:    77,
-				WorkTreeStatus: 46,
+				indexStatus:    77,
+				workTreeStatus: 46,
 			},
 		},
 		Directories: []Directory{
@@ -155,20 +157,34 @@ func TestGetStatus(t *testing.T) {
 							{
 								Name:           "git.go",
 								Dirpath:        "internal/git",
-								IndexStatus:    46,
-								WorkTreeStatus: 77,
+								indexStatus:    46,
+								workTreeStatus: 77,
 							},
 							{
 								Name:           "git_test.go",
 								Dirpath:        "internal/git",
-								IndexStatus:    46,
-								WorkTreeStatus: 77,
+								indexStatus:    46,
+								workTreeStatus: 77,
+							},
+						},
+					},
+					{
+						Name:        "utils",
+						Directories: make([]Directory, 0),
+						Files: []File{
+							{
+								Name:           "utils.go",
+								Dirpath:        "internal/utils",
+								indexStatus:    46,
+								workTreeStatus: 77,
 							},
 						},
 					},
 				},
+
 				Files: make([]File, 0),
 			},
+
 			// {
 			// 	Name:        "styling",
 			// 	Directories: nil,
@@ -184,8 +200,8 @@ func TestGetStatus(t *testing.T) {
 		},
 	}
 
-	// s, _ := json.MarshalIndent(result, "", "\t")
-	// t.Logf(string(s))
+	s, _ := json.MarshalIndent(result, "", "\t")
+	t.Logf(string(s))
 
 	if !cmp.Equal(result, expected) {
 		t.Fatal("Wrong file path output")

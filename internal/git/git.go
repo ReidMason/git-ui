@@ -148,6 +148,18 @@ func (d Directory) IsFullyStaged() bool {
 	return true
 }
 
+func (d Directory) GetFilePath() string {
+	if len(d.Files) > 0 {
+		return d.Files[0].GetFilePath()
+	}
+
+	if len(d.Directories) > 0 {
+		return d.Directories[0].GetFilePath()
+	}
+
+	return ""
+}
+
 type File struct {
 	Name           string
 	Dirpath        string
@@ -164,6 +176,7 @@ func (f File) IsExpanded() bool    { return true }
 func (f File) Children() int       { return 0 }
 func (f File) IsFullyStaged() bool { return f.workTreeStatus == '.' }
 func (f File) GetStatus() string   { return string(f.indexStatus) + string(f.workTreeStatus) }
+func (f File) GetFilePath() string { return filepath.Join(f.Dirpath, f.Name) }
 
 func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)

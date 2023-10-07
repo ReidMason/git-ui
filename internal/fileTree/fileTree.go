@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"fmt"
 	"git-ui/internal/git"
 	"strings"
 
@@ -28,6 +29,7 @@ type FileTreeItem interface {
 	Children() int
 	GetStatus() string
 	IsFullyStaged() bool
+	GetFilePath() string
 }
 
 type FileTreeLine struct {
@@ -44,7 +46,7 @@ type FileTree struct {
 	currentLine   int
 }
 
-func New(directory *git.Directory) FileTree {
+func New(directory git.Directory) FileTree {
 	return FileTree{
 		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1),
 		currentLine:   0,
@@ -105,12 +107,35 @@ func (ft *FileTree) cursorUp() {
 	ft.currentLine = max(ft.currentLine-1, 0)
 }
 
-func newFileTreeLines(directory *git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
-	newLine := newFileTreeLine(directory, depth)
+func (ft FileTree) GetIndex() int {
+	return ft.currentLine
+}
+
+func (ft FileTree) GetSelectedFilepath() string {
+	index := ft.currentLine
+	for i := 1; i < len(ft.fileTreeLines); i++ {
+		line := ft.fileTreeLines[i]
+
+		if index == 0 {
+			return line.Item.GetFilePath()
+		}
+
+		if !line.Item.IsExpanded() {
+			i += line.Item.Children()
+		}
+
+		index--
+	}
+
+	return ""
+}
+
+func newFileTreeLines(directory git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
+	newLine := newFileTreeLine(&directory, depth)
 	fileTree = append(fileTree, newLine)
 
 	for _, subDirectory := range directory.Directories {
-		fileTree = newFileTreeLines(&subDirectory, fileTree, depth+1)
+		fileTree = newFileTreeLines(subDirectory, fileTree, depth+1)
 	}
 
 	for _, file := range directory.Files {
@@ -127,7 +152,7 @@ func (ft FileTree) Render() string {
 
 	for i, line := range lines {
 		if i == ft.currentLine {
-			output += "> "
+			output += ">" + fmt.Sprint(ft.currentLine)
 		} else {
 			output += "  "
 		}

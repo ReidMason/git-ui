@@ -13,9 +13,7 @@ import (
 )
 
 type Model struct {
-	ldiff []git.DiffLine
-
-	rdiff     []git.DiffLine
+	diff      git.Diff
 	lviewport viewport.Model
 	rviewport viewport.Model
 
@@ -28,17 +26,17 @@ type Model struct {
 
 func initModel() Model {
 	rawStatus := git.GetRawStatus()
-	rawStatus = `# branch.oid c86e7ed35f16570194c2308a2f8cb53155d0440d
-# branch.head main
-# branch.upstream origin/main
-# branch.ab +0 -0
-1 .M N... 100644 100644 100644 51d742a142700c40e5d5d4915b44da5d238bef81 51d742a142700c40e5d5d4915b44da5d238bef81 internal/git/git.go
-1 .M N... 100644 100644 100644 8508f049bcb61d4c52d92e5a4c9a71051f00bcba 8508f049bcb61d4c52d92e5a4c9a71051f00bcba internal/git/git_test.go
-1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
-1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
-? internal/styling/styling.go`
+	// 	rawStatus = `# branch.oid d2ca38080c8a408cd3b4824d64237b8875acf98e
+	// # branch.head main
+	// # branch.upstream origin/main
+	// # branch.ab +0 -0
+	// 1 .M N... 100644 100644 100644 0a46fa61504b531ca53005dee44cc0b1cd6ffc99 0a46fa61504b531ca53005dee44cc0b1cd6ffc99 internal/fileTree/fileTree.go
+	// 1 .M N... 100644 100644 100644 2107e7a49e44e0f97915bb523729889d9578a612 2107e7a49e44e0f97915bb523729889d9578a612 internal/git/git.go
+	// 1 .M N... 100644 100644 100644 eba8c5554a26db93531ce2c90b34da40f86f887f eba8c5554a26db93531ce2c90b34da40f86f887f internal/git/git_test.go
+	// 1 .M N... 100644 100644 100644 c789db6decaa4c7af3d5eb2214aea59f430dd5b1 c789db6decaa4c7af3d5eb2214aea59f430dd5b1 internal/utils/utils.go
+	// 1 .M N... 100644 100644 100644 587b38dd887ed1cdd4fd9f45819f1e9f9d3ceca6 587b38dd887ed1cdd4fd9f45819f1e9f9d3ceca6 main.go`
 	gitStatus := git.GetStatus(rawStatus)
-	fileTree := filetree.New(&gitStatus)
+	fileTree := filetree.New(gitStatus)
 
 	return Model{
 		gitStatus: gitStatus,
@@ -52,11 +50,37 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+func (m Model) UpdateDiffDisplay(lineWidth int) {
+	ldiff := styling.StyleDiff(m.diff.Diff1, lineWidth)
+	m.lviewport.SetContent(ldiff)
+
+	rdiff := styling.StyleDiff(m.diff.Diff2, lineWidth)
+	m.rviewport.SetContent(rdiff)
+}
+
+func (m *Model) updateFiletree(newFiletree filetree.FileTree, lineWidth int) {
+	if !m.ready || m.fileTree.GetIndex() != newFiletree.GetIndex() {
+		filepath := newFiletree.GetSelectedFilepath()
+		if filepath != "" {
+			diffString := git.GetRawDiff(filepath)
+			diff := git.GetDiff(diffString)
+			m.lviewport.SetContent(styling.StyleDiff(diff.Diff1, lineWidth))
+			m.rviewport.SetContent(styling.StyleDiff(diff.Diff2, lineWidth))
+			m.UpdateDiffDisplay(lineWidth)
+		}
+	}
+
+	m.fileTree = newFiletree
+	m.UpdateDiffDisplay(lineWidth)
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
+
+	lineWidth := m.width - styling.ColumnStyle.GetHorizontalPadding()
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -71,22 +95,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		offset := 2
 		m.width = msg.Width
 		width := m.width/2 - offset
-		lineWidth := width - styling.ColumnStyle.GetHorizontalPadding()
+		lineWidth = width - styling.ColumnStyle.GetHorizontalPadding()
 		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
-			// fs := m.fileTree.Render()
 
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10
-			// ldiff := styleDiff(m.ldiff, lineWidth)
-			// m.lviewport.SetContent(fs)
 
 			m.rviewport = viewport.New(width, height)
 			m.rviewport.YPosition = 10
 
-			rdiff := styling.StyleDiff(m.rdiff, lineWidth)
-			m.rviewport.SetContent(rdiff)
+			newFiletree, newCmd := m.fileTree.Update(msg)
+			m.updateFiletree(newFiletree, lineWidth)
+			cmds = append(cmds, newCmd)
 
 			styling.ColumnStyle.Width(width)
 			m.ready = true
@@ -94,18 +116,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			styling.ColumnStyle.Width(width)
 			styling.ColumnStyle.Height(height)
 
-			// fs := m.fileTree.Render()
-			// m.lviewport.SetContent(fs)
-			// fs := ""
-			// for _, file := range m.gitStatus {
-			// 	fs += file.Name + "\n"
-			// }
-
-			// ldiff := styleDiff(m.ldiff, lineWidth)
-			// m.lviewport.SetContent(fs)
-
-			rdiff := styling.StyleDiff(m.rdiff, lineWidth)
-			m.rviewport.SetContent(rdiff)
+			m.UpdateDiffDisplay(lineWidth)
 
 			m.lviewport.Width = width
 			m.lviewport.Height = height
@@ -115,8 +126,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	m.fileTree, cmd = m.fileTree.Update(msg)
-	cmds = append(cmds, cmd)
+	newFiletree, newCmd := m.fileTree.Update(msg)
+	m.updateFiletree(newFiletree, lineWidth)
+	cmds = append(cmds, newCmd)
 
 	m.lviewport, cmd = m.lviewport.Update(msg)
 	cmds = append(cmds, cmd)
@@ -128,14 +140,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	headerStlying := styling.HeaderStyle.Width(m.width - 2)
+	headerStlying := styling.HeaderStyle.Width(m.width - 10)
 	header := headerStlying.Render("Git diff")
 
-	// leftView := styling.ColumnStyle.Render(m.lviewport.View())
-	leftView := m.fileTree.Render()
-	rightView := styling.ColumnStyle.Render(m.rviewport.View())
+	fileTree := m.fileTree.Render()
+	leftDiff := styling.ColumnStyle.Render(m.lviewport.View())
+	rightDiff := styling.ColumnStyle.Render(m.rviewport.View())
 
-	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, leftView, rightView)
+	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, leftDiff, rightDiff)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, mainBody)
 }
