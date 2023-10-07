@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	filetree "git-ui/internal/fileTree"
 	"git-ui/internal/git"
 	"git-ui/internal/styling"
 	"os"
@@ -12,13 +13,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type FileTreeItem interface {
-	GetName() string
-	IsExpanded() bool
-	ToggleExpanded()
-	Children() int
-}
-
 type Model struct {
 	ldiff []git.DiffLine
 
@@ -28,7 +22,7 @@ type Model struct {
 
 	gitStatus git.Directory
 	fileLine  int
-	fileTree  []FileTreeItem
+	fileTree  []filetree.FileTreeLine
 
 	width int
 	ready bool
@@ -45,7 +39,7 @@ func initModel() Model {
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
 ? internal/styling/styling.go`
 	gitStatus := git.GetStatus(rawStatus)
-	fileTree := buildFileTree(&gitStatus, make([]FileTreeItem, 0))
+	fileTree := buildFileTree(&gitStatus, make([]filetree.FileTreeLine, 0), 0)
 
 	return Model{
 		gitStatus: gitStatus,
@@ -55,47 +49,95 @@ func initModel() Model {
 	}
 }
 
-func buildFileTree(directory *git.Directory, fileTree []FileTreeItem) []FileTreeItem {
-	fileTree = append(fileTree, directory)
+func buildFileTree(directory *git.Directory, fileTree []filetree.FileTreeLine, depth int) []filetree.FileTreeLine {
+	newLine := filetree.New(directory, depth)
+	fileTree = append(fileTree, newLine)
 
 	for _, subDirectory := range directory.Directories {
-		fileTree = buildFileTree(&subDirectory, fileTree)
+		fileTree = buildFileTree(&subDirectory, fileTree, depth+1)
 	}
 
 	for _, file := range directory.Files {
-		fileTree = append(fileTree, file)
+		newLine := filetree.New(file, depth+1)
+		fileTree = append(fileTree, newLine)
 	}
 
 	return fileTree
 }
 
-func buildDirectoryString(directory git.Directory, fileLine, i int) string {
+// func buildDirectoryString(directory git.Directory, fileLine, i int) string {
+// 	output := ""
+// 	// Exclude the first level
+// 	if i > 0 {
+// 		prefix := strings.Repeat(" ", i) + "- "
+//
+// 		line := prefix + directory.Name
+// 		style := styling.StyleDirectoryLine(directory)
+// 		output = style.Render(line) + "\n"
+// 	}
+//
+// 	if !directory.IsExpanded() {
+// 		return output
+// 	}
+//
+// 	i++
+//
+// 	for _, subDirectory := range directory.Directories {
+// 		output += buildDirectoryString(subDirectory, fileLine, i)
+// 	}
+//
+// 	prefix := strings.Repeat(" ", i) + "- "
+// 	for _, f := range directory.Files {
+// 		line := prefix + string(f.IndexStatus) + string(f.WorkTreeStatus) + " " + f.Name
+// 		style := styling.StyleFileLine(f)
+// 		output += style.Render(line) + "\n"
+// 	}
+//
+// 	return output
+// }
+
+func buildFileTreeString(fileTree []filetree.FileTreeLine) string {
 	output := ""
-	// Exclude the first level
-	if i > 0 {
-		prefix := strings.Repeat(" ", i) + "- "
+	for i := 0; i < len(fileTree); i++ {
+		line := fileTree[i]
 
-		line := prefix + directory.Name
-		style := styling.StyleDirectoryLine(directory)
-		output = style.Render(line) + "\n"
+		if !line.Item.IsExpanded() {
+			i += line.Item.Children()
+		}
+
+		prefix := strings.Repeat(" ", line.Depth) + "- "
+
+		lineString := prefix + string(line.Item.GetIndexStatus()) + string(line.Item.GetWorkTreeStatus()) + " " + line.Item.GetName()
+		style := styling.StyleFileTreeLine(line.Item)
+		output += style.Render(lineString) + "\n"
 	}
 
-	if !directory.IsExpanded() {
-		return output
-	}
-
-	i++
-
-	for _, subDirectory := range directory.Directories {
-		output += buildDirectoryString(subDirectory, fileLine, i)
-	}
-
-	prefix := strings.Repeat(" ", i) + "- "
-	for _, f := range directory.Files {
-		line := prefix + string(f.IndexStatus) + string(f.WorkTreeStatus) + " " + f.Name
-		style := styling.StyleFileLine(f)
-		output += style.Render(line) + "\n"
-	}
+	// output := ""
+	// // Exclude the first level
+	// if i > 0 {
+	// 	prefix := strings.Repeat(" ", i) + "- "
+	//
+	// 	line := prefix + directory.Name
+	// 	style := styling.StyleDirectoryLine(directory)
+	// 	output = style.Render(line) + "\n"
+	// }
+	//
+	// if !directory.IsExpanded() {
+	// 	return output
+	// }
+	//
+	// i++
+	//
+	// for _, subDirectory := range directory.Directories {
+	// 	output += buildDirectoryString(subDirectory, fileLine, i)
+	// }
+	//
+	// prefix := strings.Repeat(" ", i) + "- "
+	// for _, f := range directory.Files {
+	// 	line := prefix + string(f.IndexStatus) + string(f.WorkTreeStatus) + " " + f.Name
+	// 	style := styling.StyleFileLine(f)
+	// 	output += style.Render(line) + "\n"
+	// }
 
 	return output
 }
@@ -129,16 +171,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if !m.ready {
 			// fs := buildDirectoryString(m.gitStatus, m.fileLine, 0)
-
-			fs := ""
-			for i := 0; i < len(m.fileTree); i++ {
-				line := m.fileTree[i]
-				if !line.IsExpanded() {
-					i += line.Children()
-				}
-
-				fs += line.GetName() + " " + fmt.Sprint(line.IsExpanded()) + "\n"
-			}
+			fs := buildFileTreeString(m.fileTree)
 
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10

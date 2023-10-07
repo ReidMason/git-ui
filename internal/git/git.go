@@ -126,12 +126,14 @@ func (d Directory) Children() int {
 
 	return count
 }
+func (d Directory) GetIndexStatus() rune    { return ' ' }
+func (d Directory) GetWorkTreeStatus() rune { return ' ' }
 
 func (d Directory) IsExpanded() bool {
 	return d.expanded
 }
 
-func (d *Directory) IsStaged() bool {
+func (d Directory) IsFullyStaged() bool {
 	for _, file := range d.Files {
 		if !file.IsFullyStaged() {
 			return false
@@ -139,7 +141,7 @@ func (d *Directory) IsStaged() bool {
 	}
 
 	for _, directory := range d.Directories {
-		if !directory.IsStaged() {
+		if !directory.IsFullyStaged() {
 			return false
 		}
 	}
@@ -150,27 +152,26 @@ func (d *Directory) IsStaged() bool {
 type File struct {
 	Name           string
 	Dirpath        string
-	IndexStatus    rune
-	WorkTreeStatus rune
+	indexStatus    rune
+	workTreeStatus rune
 }
 
 func (f File) GetName() string {
 	return f.Name
 }
 
-func (f File) ToggleExpanded()  {}
-func (f File) IsExpanded() bool { return true }
-func (f File) Children() int    { return 0 }
-
-func (f *File) IsFullyStaged() bool {
-	return f.WorkTreeStatus == '.'
-}
+func (f File) ToggleExpanded()         {}
+func (f File) IsExpanded() bool        { return true }
+func (f File) Children() int           { return 0 }
+func (f File) IsFullyStaged() bool     { return f.workTreeStatus == '.' }
+func (f File) GetIndexStatus() rune    { return f.indexStatus }
+func (f File) GetWorkTreeStatus() rune { return f.indexStatus }
 
 func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)
 	dirpath = filepath.Clean(dirpath)
 
-	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorkTreeStatus: workTreeStatus}
+	return File{Name: filename, Dirpath: dirpath, indexStatus: indexStatus, workTreeStatus: workTreeStatus}
 }
 
 func GetStatus(rawStatus string) Directory {

@@ -2,6 +2,7 @@ package styling
 
 import (
 	"fmt"
+	filetree "git-ui/internal/fileTree"
 	"git-ui/internal/git"
 	"strings"
 
@@ -22,19 +23,7 @@ var (
 			Foreground(lipgloss.Color("#4b5161"))
 )
 
-func StyleDirectoryLine(directory git.Directory) lipgloss.Style {
-	style := lipgloss.NewStyle()
-
-	if directory.IsStaged() {
-		style = style.Foreground(lipgloss.Color("#49b543"))
-	} else {
-		style = style.Foreground(lipgloss.Color("#f5b642"))
-	}
-
-	return style
-}
-
-func StyleFileLine(file git.File) lipgloss.Style {
+func StyleFileTreeLine(file filetree.FileTreeItem) lipgloss.Style {
 	style := lipgloss.NewStyle()
 
 	if file.IsFullyStaged() {
