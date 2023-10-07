@@ -242,7 +242,7 @@ func addFile(directory Directory, dirpath []string, newFile File) Directory {
 }
 
 func GetRawDiff(filepath string) string {
-	args := []string{"diff", "-U1000", "--"}
+	args := []string{"diff", "--no-ext-diff", "-U1000", "--"}
 	// If it's new we want to add /dev/null instead
 	args = append(args, filepath)
 
