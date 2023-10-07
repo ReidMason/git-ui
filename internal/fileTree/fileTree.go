@@ -9,13 +9,19 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func StyleFileTreeLine(file FileTreeItem) lipgloss.Style {
+func StyleFileTreeLine(file FileTreeItem, selected, focused bool) lipgloss.Style {
 	style := lipgloss.NewStyle()
 
 	if file.IsFullyStaged() {
 		style = style.Foreground(lipgloss.Color("#a6e3a1"))
 	} else {
 		style = style.Foreground(lipgloss.Color("#f38ba8"))
+	}
+
+	if selected && focused {
+		return style.Copy().Background(lipgloss.Color("8"))
+	} else if selected {
+		return style.Copy().Background(lipgloss.Color("0"))
 	}
 
 	return style
@@ -154,13 +160,13 @@ func (ft FileTree) Render() string {
 	lines := ft.buildFileTreeString()
 	output := ""
 
-	for i, line := range lines {
+	for _, line := range lines {
 
-		if i == ft.currentLine {
-			output += "> "
-		} else {
-			output += "  "
-		}
+		// if i == ft.currentLine {
+		// 	output += ">"
+		// } else {
+		// 	output += " "
+		// }
 		output += line + "\n"
 	}
 
@@ -174,7 +180,8 @@ func (ft FileTree) buildFileTreeString() []string {
 
 		prefix := strings.Repeat("  ", line.Depth) + "-"
 		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
-		style := StyleFileTreeLine(line.Item)
+		selected := i-1 == ft.currentLine
+		style := StyleFileTreeLine(line.Item, selected, ft.IsFocused)
 		output = append(output, style.Render(lineString))
 
 		if !line.Item.IsExpanded() {
