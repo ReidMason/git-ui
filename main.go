@@ -74,9 +74,8 @@ func buildFileTreeString(fileTree []filetree.FileTreeLine) string {
 			i += line.Item.Children()
 		}
 
-		prefix := strings.Repeat(" ", line.Depth) + "- "
-
-		lineString := prefix + string(line.Item.GetIndexStatus()) + string(line.Item.GetWorkTreeStatus()) + " " + line.Item.GetName()
+		prefix := strings.Repeat(" ", line.Depth) + "-"
+		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
 		style := styling.StyleFileTreeLine(line.Item)
 		output += style.Render(lineString) + "\n"
 	}

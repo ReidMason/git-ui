@@ -126,8 +126,7 @@ func (d Directory) Children() int {
 
 	return count
 }
-func (d Directory) GetIndexStatus() rune    { return ' ' }
-func (d Directory) GetWorkTreeStatus() rune { return ' ' }
+func (d Directory) GetStatus() string { return "" }
 
 func (d Directory) IsExpanded() bool {
 	return d.expanded
@@ -160,12 +159,11 @@ func (f File) GetName() string {
 	return f.Name
 }
 
-func (f File) ToggleExpanded()         {}
-func (f File) IsExpanded() bool        { return true }
-func (f File) Children() int           { return 0 }
-func (f File) IsFullyStaged() bool     { return f.workTreeStatus == '.' }
-func (f File) GetIndexStatus() rune    { return f.indexStatus }
-func (f File) GetWorkTreeStatus() rune { return f.indexStatus }
+func (f File) ToggleExpanded()     {}
+func (f File) IsExpanded() bool    { return true }
+func (f File) Children() int       { return 0 }
+func (f File) IsFullyStaged() bool { return f.workTreeStatus == '.' }
+func (f File) GetStatus() string   { return string(f.indexStatus) + string(f.workTreeStatus) }
 
 func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)

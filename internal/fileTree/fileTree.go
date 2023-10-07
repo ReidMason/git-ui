@@ -5,8 +5,7 @@ type FileTreeItem interface {
 	IsExpanded() bool
 	ToggleExpanded()
 	Children() int
-	GetIndexStatus() rune
-	GetWorkTreeStatus() rune
+	GetStatus() string
 	IsFullyStaged() bool
 }
 
