@@ -20,6 +20,8 @@ var (
 
 	GreyOutStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4b5161"))
+
+	DiffStyle = ColumnStyle.Copy()
 )
 
 func StyleLine(line git.DiffLine, width int) string {
@@ -72,7 +74,8 @@ func StyleDiff(diff []git.DiffLine, width int) string {
 		}
 		lineNumber += "│"
 
-		diffString += GreyOutStyle.Render(lineNumber) + StyleLine(line, width) + "\n"
+		// TODO: This + 800 is wrong but I'm not sure why it's not working so it is fixed for now
+		diffString += GreyOutStyle.Render(lineNumber) + StyleLine(line, width+800) + "\n"
 	}
 
 	return diffString
