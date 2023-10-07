@@ -39,7 +39,7 @@ func initModel() Model {
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
 ? internal/styling/styling.go`
 	gitStatus := git.GetStatus(rawStatus)
-	fileTree := buildFileTree(&gitStatus, make([]filetree.FileTreeLine, 0), 0)
+	fileTree := buildFileTree(&gitStatus, make([]filetree.FileTreeLine, 0), -1)
 
 	return Model{
 		gitStatus: gitStatus,
@@ -65,40 +65,9 @@ func buildFileTree(directory *git.Directory, fileTree []filetree.FileTreeLine, d
 	return fileTree
 }
 
-// func buildDirectoryString(directory git.Directory, fileLine, i int) string {
-// 	output := ""
-// 	// Exclude the first level
-// 	if i > 0 {
-// 		prefix := strings.Repeat(" ", i) + "- "
-//
-// 		line := prefix + directory.Name
-// 		style := styling.StyleDirectoryLine(directory)
-// 		output = style.Render(line) + "\n"
-// 	}
-//
-// 	if !directory.IsExpanded() {
-// 		return output
-// 	}
-//
-// 	i++
-//
-// 	for _, subDirectory := range directory.Directories {
-// 		output += buildDirectoryString(subDirectory, fileLine, i)
-// 	}
-//
-// 	prefix := strings.Repeat(" ", i) + "- "
-// 	for _, f := range directory.Files {
-// 		line := prefix + string(f.IndexStatus) + string(f.WorkTreeStatus) + " " + f.Name
-// 		style := styling.StyleFileLine(f)
-// 		output += style.Render(line) + "\n"
-// 	}
-//
-// 	return output
-// }
-
 func buildFileTreeString(fileTree []filetree.FileTreeLine) string {
 	output := ""
-	for i := 0; i < len(fileTree); i++ {
+	for i := 1; i < len(fileTree); i++ {
 		line := fileTree[i]
 
 		if !line.Item.IsExpanded() {
@@ -111,33 +80,6 @@ func buildFileTreeString(fileTree []filetree.FileTreeLine) string {
 		style := styling.StyleFileTreeLine(line.Item)
 		output += style.Render(lineString) + "\n"
 	}
-
-	// output := ""
-	// // Exclude the first level
-	// if i > 0 {
-	// 	prefix := strings.Repeat(" ", i) + "- "
-	//
-	// 	line := prefix + directory.Name
-	// 	style := styling.StyleDirectoryLine(directory)
-	// 	output = style.Render(line) + "\n"
-	// }
-	//
-	// if !directory.IsExpanded() {
-	// 	return output
-	// }
-	//
-	// i++
-	//
-	// for _, subDirectory := range directory.Directories {
-	// 	output += buildDirectoryString(subDirectory, fileLine, i)
-	// }
-	//
-	// prefix := strings.Repeat(" ", i) + "- "
-	// for _, f := range directory.Files {
-	// 	line := prefix + string(f.IndexStatus) + string(f.WorkTreeStatus) + " " + f.Name
-	// 	style := styling.StyleFileLine(f)
-	// 	output += style.Render(line) + "\n"
-	// }
 
 	return output
 }
