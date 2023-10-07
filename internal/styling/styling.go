@@ -2,7 +2,6 @@ package styling
 
 import (
 	"fmt"
-	filetree "git-ui/internal/fileTree"
 	"git-ui/internal/git"
 	"strings"
 
@@ -22,18 +21,6 @@ var (
 	GreyOutStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4b5161"))
 )
-
-func StyleFileTreeLine(file filetree.FileTreeItem) lipgloss.Style {
-	style := lipgloss.NewStyle()
-
-	if file.IsFullyStaged() {
-		style = style.Foreground(lipgloss.Color("#49b543"))
-	} else {
-		style = style.Foreground(lipgloss.Color("#f5b642"))
-	}
-
-	return style
-}
 
 func StyleLine(line git.DiffLine, width int) string {
 	lineString := line.Content[:min(width-7, len(line.Content))]

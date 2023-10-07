@@ -6,7 +6,6 @@ import (
 	"git-ui/internal/git"
 	"git-ui/internal/styling"
 	"os"
-	"strings"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -21,8 +20,7 @@ type Model struct {
 	rviewport viewport.Model
 
 	gitStatus git.Directory
-	fileLine  int
-	fileTree  []filetree.FileTreeLine
+	fileTree  filetree.FileTree
 
 	width int
 	ready bool
@@ -39,48 +37,13 @@ func initModel() Model {
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
 ? internal/styling/styling.go`
 	gitStatus := git.GetStatus(rawStatus)
-	fileTree := buildFileTree(&gitStatus, make([]filetree.FileTreeLine, 0), -1)
+	fileTree := filetree.New(&gitStatus)
 
 	return Model{
 		gitStatus: gitStatus,
 		ready:     false,
-		fileLine:  0,
 		fileTree:  fileTree,
 	}
-}
-
-func buildFileTree(directory *git.Directory, fileTree []filetree.FileTreeLine, depth int) []filetree.FileTreeLine {
-	newLine := filetree.New(directory, depth)
-	fileTree = append(fileTree, newLine)
-
-	for _, subDirectory := range directory.Directories {
-		fileTree = buildFileTree(&subDirectory, fileTree, depth+1)
-	}
-
-	for _, file := range directory.Files {
-		newLine := filetree.New(file, depth+1)
-		fileTree = append(fileTree, newLine)
-	}
-
-	return fileTree
-}
-
-func buildFileTreeString(fileTree []filetree.FileTreeLine) []string {
-	output := make([]string, 0)
-	for i := 1; i < len(fileTree); i++ {
-		line := fileTree[i]
-
-		prefix := strings.Repeat(" ", line.Depth) + "-"
-		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
-		style := styling.StyleFileTreeLine(line.Item)
-		output = append(output, style.Render(lineString))
-
-		if !line.Item.IsExpanded() {
-			i += line.Item.Children()
-		}
-	}
-
-	return output
 }
 
 func (m Model) Init() tea.Cmd {
@@ -111,7 +74,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
-			lines := buildFileTreeString(m.fileTree)
+			lines := m.fileTree.BuildFileTreeString()
 			fs := filetree.Render(lines)
 
 			m.lviewport = viewport.New(width, height)
