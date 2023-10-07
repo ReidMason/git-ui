@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"fmt"
 	"git-ui/internal/git"
 	"strings"
 
@@ -152,7 +151,7 @@ func (ft FileTree) Render() string {
 
 	for i, line := range lines {
 		if i == ft.currentLine {
-			output += ">" + fmt.Sprint(ft.currentLine)
+			output += "> "
 		} else {
 			output += "  "
 		}
@@ -167,7 +166,7 @@ func (ft FileTree) buildFileTreeString() []string {
 	for i := 1; i < len(ft.fileTreeLines); i++ {
 		line := ft.fileTreeLines[i]
 
-		prefix := strings.Repeat(" ", line.Depth) + "-"
+		prefix := strings.Repeat("  ", line.Depth) + "-"
 		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
 		style := StyleFileTreeLine(line.Item)
 		output = append(output, style.Render(lineString))
