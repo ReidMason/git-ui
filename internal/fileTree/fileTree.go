@@ -13,9 +13,9 @@ func StyleFileTreeLine(file FileTreeItem) lipgloss.Style {
 	style := lipgloss.NewStyle()
 
 	if file.IsFullyStaged() {
-		style = style.Foreground(lipgloss.Color("#49b543"))
+		style = style.Foreground(lipgloss.Color("#a6e3a1"))
 	} else {
-		style = style.Foreground(lipgloss.Color("#f5b642"))
+		style = style.Foreground(lipgloss.Color("#f38ba8"))
 	}
 
 	return style
