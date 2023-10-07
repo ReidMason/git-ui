@@ -108,10 +108,27 @@ type Directory struct {
 	Name        string
 	Files       []File
 	Directories []Directory
+	expanded    bool
 }
 
 func newDirectory(name string) Directory {
-	return Directory{Name: name, Files: make([]File, 0), Directories: make([]Directory, 0)}
+	return Directory{Name: name, Files: make([]File, 0), Directories: make([]Directory, 0), expanded: true}
+}
+
+func (d Directory) GetName() string  { return d.Name }
+func (d *Directory) ToggleExpanded() { d.expanded = !d.expanded }
+func (d Directory) Children() int {
+	count := len(d.Files)
+	for _, directory := range d.Directories {
+		count++
+		count += directory.Children()
+	}
+
+	return count
+}
+
+func (d Directory) IsExpanded() bool {
+	return d.expanded
 }
 
 func (d *Directory) IsStaged() bool {
@@ -136,6 +153,14 @@ type File struct {
 	IndexStatus    rune
 	WorkTreeStatus rune
 }
+
+func (f File) GetName() string {
+	return f.Name
+}
+
+func (f File) ToggleExpanded()  {}
+func (f File) IsExpanded() bool { return true }
+func (f File) Children() int    { return 0 }
 
 func (f *File) IsFullyStaged() bool {
 	return f.WorkTreeStatus == '.'

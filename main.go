@@ -12,6 +12,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type FileTreeItem interface {
+	GetName() string
+	IsExpanded() bool
+	ToggleExpanded()
+	Children() int
+}
+
 type Model struct {
 	ldiff []git.DiffLine
 
@@ -20,24 +27,49 @@ type Model struct {
 	rviewport viewport.Model
 
 	gitStatus git.Directory
-	width     int
-	ready     bool
+	fileLine  int
+	fileTree  []FileTreeItem
+
+	width int
+	ready bool
 }
 
-func main() {
-	p := tea.NewProgram(
-		initModel(),
-		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
-		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
-	)
+func initModel() Model {
+	rawStatus := git.GetRawStatus()
+	rawStatus = `# branch.oid c86e7ed35f16570194c2308a2f8cb53155d0440d
+# branch.head main
+# branch.upstream origin/main
+# branch.ab +0 -0
+1 .M N... 100644 100644 100644 51d742a142700c40e5d5d4915b44da5d238bef81 51d742a142700c40e5d5d4915b44da5d238bef81 internal/git/git.go
+1 .M N... 100644 100644 100644 8508f049bcb61d4c52d92e5a4c9a71051f00bcba 8508f049bcb61d4c52d92e5a4c9a71051f00bcba internal/git/git_test.go
+1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go
+? internal/styling/styling.go`
+	gitStatus := git.GetStatus(rawStatus)
+	fileTree := buildFileTree(&gitStatus, make([]FileTreeItem, 0))
 
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
-		os.Exit(1)
+	return Model{
+		gitStatus: gitStatus,
+		ready:     false,
+		fileLine:  0,
+		fileTree:  fileTree,
 	}
 }
 
-func buildDirectoryString(directory git.Directory, i int) string {
+func buildFileTree(directory *git.Directory, fileTree []FileTreeItem) []FileTreeItem {
+	fileTree = append(fileTree, directory)
+
+	for _, subDirectory := range directory.Directories {
+		fileTree = buildFileTree(&subDirectory, fileTree)
+	}
+
+	for _, file := range directory.Files {
+		fileTree = append(fileTree, file)
+	}
+
+	return fileTree
+}
+
+func buildDirectoryString(directory git.Directory, fileLine, i int) string {
 	output := ""
 	// Exclude the first level
 	if i > 0 {
@@ -47,10 +79,15 @@ func buildDirectoryString(directory git.Directory, i int) string {
 		style := styling.StyleDirectoryLine(directory)
 		output = style.Render(line) + "\n"
 	}
+
+	if !directory.IsExpanded() {
+		return output
+	}
+
 	i++
 
 	for _, subDirectory := range directory.Directories {
-		output += buildDirectoryString(subDirectory, i)
+		output += buildDirectoryString(subDirectory, fileLine, i)
 	}
 
 	prefix := strings.Repeat(" ", i) + "- "
@@ -61,16 +98,6 @@ func buildDirectoryString(directory git.Directory, i int) string {
 	}
 
 	return output
-}
-
-func initModel() Model {
-	rawStatus := git.GetRawStatus()
-	gitStatus := git.GetStatus(rawStatus)
-
-	return Model{
-		gitStatus: gitStatus,
-		ready:     false,
-	}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -101,7 +128,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		height := msg.Height - styling.ColumnStyle.GetVerticalPadding() - 5
 
 		if !m.ready {
-			fs := buildDirectoryString(m.gitStatus, 0)
+			// fs := buildDirectoryString(m.gitStatus, m.fileLine, 0)
+
+			fs := ""
+			for i := 0; i < len(m.fileTree); i++ {
+				line := m.fileTree[i]
+				if !line.IsExpanded() {
+					i += line.Children()
+				}
+
+				fs += line.GetName() + " " + fmt.Sprint(line.IsExpanded()) + "\n"
+			}
 
 			m.lviewport = viewport.New(width, height)
 			m.lviewport.YPosition = 10
@@ -158,4 +195,17 @@ func (m Model) View() string {
 	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, leftView, rightView)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, mainBody)
+}
+
+func main() {
+	p := tea.NewProgram(
+		initModel(),
+		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
+		tea.WithMouseCellMotion(), // turn on mouse support so we can track the mouse wheel
+	)
+
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Alas, there's been an error: %v", err)
+		os.Exit(1)
+	}
 }
