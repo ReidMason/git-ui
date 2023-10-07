@@ -149,7 +149,10 @@ func (m Model) View() string {
 
 	columnWidth := m.width / 12
 	fileTreeStyle := lipgloss.NewStyle().MaxWidth(columnWidth * 2)
-	fileTree := styling.ColumnStyle.Render(fileTreeStyle.Render(m.fileTree.Render()))
+	fileTreeString := fileTreeStyle.Render(m.fileTree.Render())
+	fileTreeStyle = styling.ColumnStyle.Copy().Width(columnWidth * 2)
+
+	fileTree := fileTreeStyle.Render(fileTreeString)
 
 	mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, diffView)
 
