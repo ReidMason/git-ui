@@ -127,13 +127,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func formatDiff(viewport viewport.Model) string {
+	diffString := viewport.View()
+	thing := lipgloss.
+		NewStyle().
+		MaxWidth(viewport.Width - styling.ColumnStyle.GetHorizontalBorderSize()).
+		Render(diffString)
+	return styling.ColumnStyle.
+		Width(viewport.Width - styling.ColumnStyle.GetHorizontalBorderSize()).
+		Render(thing)
+}
+
 func (m Model) View() string {
 	takenWidth := m.lviewport.Width * 2
-	headerStlying := styling.HeaderStyle.Width(m.width - 2)
+	headerStlying := styling.HeaderStyle.
+		Width(m.width - styling.HeaderStyle.GetHorizontalBorderSize())
 	header := headerStlying.Render("Git-UI")
 
-	leftDiff := styling.ColumnStyle.Render(m.lviewport.View())
-	rightDiff := styling.ColumnStyle.Render(m.rviewport.View())
+	leftDiff := formatDiff(m.lviewport)
+	rightDiff := formatDiff(m.rviewport)
 
 	width := m.width - takenWidth - styling.ColumnStyle.GetHorizontalBorderSize()
 	fileTreeStyle := lipgloss.NewStyle().MaxWidth(width)
@@ -147,6 +159,7 @@ func (m Model) View() string {
 }
 
 func main() {
+
 	p := tea.NewProgram(
 		initModel(),
 		tea.WithAltScreen(),       // use the full size of the terminal in its "alternate screen buffer"
