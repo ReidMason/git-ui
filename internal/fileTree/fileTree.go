@@ -43,12 +43,14 @@ func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
 type FileTree struct {
 	fileTreeLines []FileTreeLine
 	currentLine   int
+	IsFocused     bool
 }
 
 func New(directory git.Directory) FileTree {
 	return FileTree{
 		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1),
 		currentLine:   0,
+		IsFocused:     true,
 	}
 }
 
@@ -60,6 +62,9 @@ func (ft FileTree) Update(msg tea.Msg) (FileTree, tea.Cmd) {
 
 func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 	var cmd tea.Cmd
+	if !ft.IsFocused {
+		return ft, cmd
+	}
 
 	downKeymap := key.NewBinding(
 		key.WithKeys("down", "j"),
