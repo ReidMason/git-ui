@@ -48,14 +48,14 @@ func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
 
 type FileTree struct {
 	fileTreeLines []FileTreeLine
-	currentLine   int
+	cursorIndex   int
 	IsFocused     bool
 }
 
 func New(directory *git.Directory) FileTree {
 	return FileTree{
 		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:],
-		currentLine:   0,
+		cursorIndex:   0,
 		IsFocused:     true,
 	}
 }
@@ -115,7 +115,7 @@ func (ft *FileTree) handleEnter() {
 }
 
 func (ft *FileTree) cursorDown() {
-	for i := ft.currentLine + 1; i < len(ft.fileTreeLines); i++ {
+	for i := ft.cursorIndex + 1; i < len(ft.fileTreeLines); i++ {
 		if ft.updateCursorIndex(i) {
 			return
 		}
@@ -123,7 +123,7 @@ func (ft *FileTree) cursorDown() {
 }
 
 func (ft *FileTree) cursorUp() {
-	for i := ft.currentLine - 1; i >= 0; i-- {
+	for i := ft.cursorIndex - 1; i >= 0; i-- {
 		if ft.updateCursorIndex(i) {
 			return
 		}
@@ -133,7 +133,7 @@ func (ft *FileTree) cursorUp() {
 func (ft *FileTree) updateCursorIndex(newIndex int) bool {
 	newSelectedLine := ft.fileTreeLines[newIndex]
 	if newSelectedLine.Item.IsVisible() {
-		ft.currentLine = newIndex
+		ft.cursorIndex = newIndex
 		return true
 	}
 
@@ -141,7 +141,7 @@ func (ft *FileTree) updateCursorIndex(newIndex int) bool {
 }
 
 func (ft FileTree) GetIndex() int {
-	return ft.currentLine
+	return ft.cursorIndex
 }
 
 func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
@@ -150,7 +150,7 @@ func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
 		return result, errors.New("No file tree lines to display")
 	}
 
-	return ft.fileTreeLines[max(0, min(len(ft.fileTreeLines)-1, ft.currentLine))], nil
+	return ft.fileTreeLines[max(0, min(len(ft.fileTreeLines)-1, ft.cursorIndex))], nil
 }
 
 func (ft FileTree) GetSelectedFilepath() string {
@@ -198,7 +198,7 @@ func (ft FileTree) buildFileTreeString() []string {
 		prefix := strings.Repeat("  ", line.Depth) + "-"
 		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
 
-		selected := i == ft.currentLine
+		selected := i == ft.cursorIndex
 		style := StyleFileTreeLine(line.Item, selected, ft.IsFocused)
 		output = append(output, style.Render(lineString))
 	}
