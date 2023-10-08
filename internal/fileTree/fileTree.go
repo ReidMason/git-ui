@@ -23,10 +23,11 @@ func StyleFileTreeLine(file FileTreeItem) lipgloss.Style {
 }
 
 func styleFileSelected(selected, focused bool) lipgloss.Style {
+
 	if selected && focused {
-		return lipgloss.NewStyle().Background(lipgloss.Color("8"))
+		return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
 	} else if selected {
-		return lipgloss.NewStyle().Background(lipgloss.Color("0"))
+		return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("0"))
 	}
 
 	return lipgloss.NewStyle()
@@ -213,13 +214,18 @@ func (ft FileTree) buildFileTreeString() []string {
 
 		prefix += icon
 		lineString := line.Item.GetStatus() + " " + line.Item.GetName()
+		selected := i == ft.cursorIndex
+		if selected {
+			lineString = lipgloss.PlaceHorizontal(50, lipgloss.Left, lineString)
+		}
 
 		style := StyleFileTreeLine(line.Item)
 		lineString = prefix + style.Render(lineString)
 
-		selected := i == ft.cursorIndex
-		selectedStyling := styleFileSelected(selected, ft.IsFocused)
-		lineString = selectedStyling.Render(lineString)
+		if selected {
+			selectedStyling := styleFileSelected(selected, ft.IsFocused)
+			lineString = selectedStyling.Render(lineString)
+		}
 
 		output = append(output, lineString)
 	}
