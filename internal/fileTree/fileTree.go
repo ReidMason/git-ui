@@ -219,7 +219,7 @@ func (ft FileTree) buildFileTreeString() []string {
 			lineString = lipgloss.PlaceHorizontal(50, lipgloss.Left, lineString)
 		}
 
-		style := StyleFileTreeLine(line.Item)
+		style := styleFileTreeLine(line.Item)
 		lineString = prefix + style.Render(lineString)
 
 		if selected {
