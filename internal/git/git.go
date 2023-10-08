@@ -26,7 +26,7 @@ type DiffLine struct {
 	Type    DiffType
 }
 
-func GetDiff(diffString string) Diff {
+func ParseDiff(diffString string) Diff {
 	lines := strings.Split(diffString, "\n")
 
 	diff := Diff{Diff1: make([]DiffLine, 0), Diff2: make([]DiffLine, 0)}
@@ -109,15 +109,15 @@ type Directory struct {
 	Parent      *Directory
 	Files       []File
 	Directories []*Directory
-	expanded    bool
+	Expanded    bool
 }
 
 func newDirectory(name string, parent *Directory) *Directory {
-	return &Directory{Name: name, Files: make([]File, 0), Directories: make([]*Directory, 0), expanded: true, Parent: parent}
+	return &Directory{Name: name, Files: make([]File, 0), Directories: make([]*Directory, 0), Expanded: true, Parent: parent}
 }
 
 func (d Directory) GetName() string  { return d.Name }
-func (d *Directory) ToggleExpanded() { d.expanded = !d.expanded }
+func (d *Directory) ToggleExpanded() { d.Expanded = !d.Expanded }
 func (d Directory) Children() int {
 	count := len(d.Files)
 	for _, directory := range d.Directories {
@@ -128,13 +128,13 @@ func (d Directory) Children() int {
 	return count
 }
 func (d Directory) GetStatus() string { return "" }
-func (d Directory) IsExpanded() bool  { return d.expanded }
+func (d Directory) IsExpanded() bool  { return d.Expanded }
 func (d Directory) IsVisible() bool {
 	if d.Parent == nil {
 		return true
 	}
 
-	return d.Parent.IsVisible() && d.Parent.expanded
+	return d.Parent.IsVisible() && d.Parent.Expanded
 }
 
 func (d Directory) IsFullyStaged() bool {
@@ -169,8 +169,8 @@ type File struct {
 	Name           string
 	Parent         *Directory
 	Dirpath        string
-	indexStatus    rune
-	workTreeStatus rune
+	IndexStatus    rune
+	WorkTreeStatus rune
 }
 
 func (f File) GetName() string {
@@ -179,17 +179,17 @@ func (f File) GetName() string {
 
 func (f File) ToggleExpanded()     {}
 func (f File) IsExpanded() bool    { return true }
-func (f File) IsVisible() bool     { return f.Parent.IsVisible() && f.Parent.expanded }
+func (f File) IsVisible() bool     { return f.Parent.IsVisible() && f.Parent.Expanded }
 func (f File) Children() int       { return 0 }
-func (f File) IsFullyStaged() bool { return f.workTreeStatus == '.' }
-func (f File) GetStatus() string   { return string(f.indexStatus) + string(f.workTreeStatus) }
+func (f File) IsFullyStaged() bool { return f.WorkTreeStatus == '.' }
+func (f File) GetStatus() string   { return string(f.IndexStatus) + string(f.WorkTreeStatus) }
 func (f File) GetFilePath() string { return filepath.Join(f.Dirpath, f.Name) }
 
 func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)
 	dirpath = filepath.Clean(dirpath)
 
-	return File{Name: filename, Dirpath: dirpath, indexStatus: indexStatus, workTreeStatus: workTreeStatus}
+	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorkTreeStatus: workTreeStatus}
 }
 
 func GetStatus(rawStatus string) *Directory {
