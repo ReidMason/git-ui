@@ -116,9 +116,7 @@ func (ft *FileTree) handleEnter() {
 
 func (ft *FileTree) cursorDown() {
 	for i := ft.currentLine + 1; i < len(ft.fileTreeLines); i++ {
-		newSelectedLine := ft.fileTreeLines[i]
-		if newSelectedLine.Item.IsVisible() {
-			ft.currentLine = i
+		if ft.updateCursorIndex(i) {
 			return
 		}
 	}
@@ -126,12 +124,20 @@ func (ft *FileTree) cursorDown() {
 
 func (ft *FileTree) cursorUp() {
 	for i := ft.currentLine - 1; i >= 0; i-- {
-		newSelectedLine := ft.fileTreeLines[i]
-		if newSelectedLine.Item.IsVisible() {
-			ft.currentLine = i
+		if ft.updateCursorIndex(i) {
 			return
 		}
 	}
+}
+
+func (ft *FileTree) updateCursorIndex(newIndex int) bool {
+	newSelectedLine := ft.fileTreeLines[newIndex]
+	if newSelectedLine.Item.IsVisible() {
+		ft.currentLine = newIndex
+		return true
+	}
+
+	return false
 }
 
 func (ft FileTree) GetIndex() int {
