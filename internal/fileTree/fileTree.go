@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func StyleFileTreeLine(file FileTreeItem) lipgloss.Style {
+func styleFileTreeLine(file FileTreeItem) lipgloss.Style {
 	style := lipgloss.NewStyle()
 
 	if file.IsFullyStaged() {
