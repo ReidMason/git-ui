@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func StyleFileTreeLine(file FileTreeItem, selected, focused bool) lipgloss.Style {
+func StyleFileTreeLine(file FileTreeItem) lipgloss.Style {
 	style := lipgloss.NewStyle()
 
 	if file.IsFullyStaged() {
@@ -19,13 +19,17 @@ func StyleFileTreeLine(file FileTreeItem, selected, focused bool) lipgloss.Style
 		style = style.Foreground(lipgloss.Color("#f38ba8"))
 	}
 
+	return style
+}
+
+func styleFileSelected(selected, focused bool) lipgloss.Style {
 	if selected && focused {
-		return style.Copy().Background(lipgloss.Color("8"))
+		return lipgloss.NewStyle().Background(lipgloss.Color("8"))
 	} else if selected {
-		return style.Copy().Background(lipgloss.Color("0"))
+		return lipgloss.NewStyle().Background(lipgloss.Color("0"))
 	}
 
-	return style
+	return lipgloss.NewStyle()
 }
 
 type FileTreeItem interface {
@@ -208,11 +212,16 @@ func (ft FileTree) buildFileTreeString() []string {
 		}
 
 		prefix += icon
-		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
+		lineString := line.Item.GetStatus() + " " + line.Item.GetName()
+
+		style := StyleFileTreeLine(line.Item)
+		lineString = prefix + style.Render(lineString)
 
 		selected := i == ft.cursorIndex
-		style := StyleFileTreeLine(line.Item, selected, ft.IsFocused)
-		output = append(output, style.Render(lineString))
+		selectedStyling := styleFileSelected(selected, ft.IsFocused)
+		lineString = selectedStyling.Render(lineString)
+
+		output = append(output, lineString)
 	}
 
 	return output
