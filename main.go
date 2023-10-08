@@ -58,7 +58,7 @@ func (m *Model) updateFiletree(newFiletree filetree.FileTree, lineWidth int) {
 		filepath := newFiletree.GetSelectedFilepath()
 		if filepath != "" {
 			diffString := git.GetRawDiff(filepath)
-			diff := git.GetDiff(diffString)
+			diff := git.ParseDiff(diffString)
 			m.lviewport.SetContent(styling.StyleDiff(diff.Diff1, lineWidth))
 			m.rviewport.SetContent(styling.StyleDiff(diff.Diff2, lineWidth))
 			m.lviewport.GotoTop()
