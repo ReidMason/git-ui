@@ -128,6 +128,7 @@ func (d Directory) Children() int {
 	return count
 }
 func (d Directory) GetStatus() string { return "" }
+func (d Directory) IsExpanded() bool  { return d.expanded }
 func (d Directory) IsVisible() bool {
 	if d.Parent == nil {
 		return true

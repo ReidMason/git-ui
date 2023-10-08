@@ -195,7 +195,19 @@ func (ft FileTree) buildFileTreeString() []string {
 			continue
 		}
 
-		prefix := strings.Repeat("  ", line.Depth) + "-"
+		prefix := strings.Repeat("  ", line.Depth)
+
+		icon := " "
+		switch dir := line.Item.(type) {
+		case *git.Directory:
+			if dir.IsExpanded() {
+				icon = "▼"
+			} else {
+				icon = "▶"
+			}
+		}
+
+		prefix += icon
 		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
 
 		selected := i == ft.cursorIndex
