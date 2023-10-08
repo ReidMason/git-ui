@@ -178,6 +178,11 @@ func (ft FileTree) Render() string {
 
 func (ft FileTree) buildFileTreeString() []string {
 	output := make([]string, 0)
+
+	if len(ft.fileTreeLines) == 0 {
+		return append(output, "No changes")
+	}
+
 	for i := 0; i < len(ft.fileTreeLines); i++ {
 		line := ft.fileTreeLines[i]
 		if !line.Item.IsVisible() {
