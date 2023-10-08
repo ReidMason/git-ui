@@ -201,6 +201,15 @@ func (m Model) View() string {
 }
 
 func main() {
+	debug := false
+	if debug {
+		f, err := tea.LogToFile("debug.log", "debug")
+		if err != nil {
+			fmt.Println("fatal:", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	}
 
 	p := tea.NewProgram(
 		initModel(),
