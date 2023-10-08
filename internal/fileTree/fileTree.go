@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"errors"
 	"git-ui/internal/git"
 	"strings"
 
@@ -102,7 +103,10 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 }
 
 func (ft *FileTree) handleEnter() {
-	selectedLine := ft.getSelectedLine()
+	selectedLine, err := ft.getSelectedLine()
+	if err != nil {
+		return
+	}
 
 	switch lineItem := selectedLine.Item.(type) {
 	case *git.Directory:
@@ -134,12 +138,21 @@ func (ft FileTree) GetIndex() int {
 	return ft.currentLine
 }
 
-func (ft FileTree) getSelectedLine() FileTreeLine {
-	return ft.fileTreeLines[ft.currentLine]
+func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
+	if len(ft.fileTreeLines) == 0 {
+		var result FileTreeLine
+		return result, errors.New("No file tree lines to display")
+	}
+
+	return ft.fileTreeLines[min(0, max(len(ft.fileTreeLines)-1, ft.currentLine))], nil
 }
 
 func (ft FileTree) GetSelectedFilepath() string {
-	currentLine := ft.getSelectedLine()
+	currentLine, err := ft.getSelectedLine()
+	if err != nil {
+		return ""
+	}
+
 	return currentLine.Item.GetFilePath()
 }
 
