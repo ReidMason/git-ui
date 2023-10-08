@@ -106,17 +106,17 @@ const (
 
 type Directory struct {
 	Name        string
+	Parent      *Directory
 	Files       []File
-	Directories []Directory
+	Directories []*Directory
 	expanded    bool
 }
 
-func newDirectory(name string) Directory {
-	return Directory{Name: name, Files: make([]File, 0), Directories: make([]Directory, 0), expanded: true}
+func newDirectory(name string, parent *Directory) *Directory {
+	return &Directory{Name: name, Files: make([]File, 0), Directories: make([]*Directory, 0), expanded: true, Parent: parent}
 }
 
-func (d Directory) GetName() string { return d.Name }
-
+func (d Directory) GetName() string  { return d.Name }
 func (d *Directory) ToggleExpanded() { d.expanded = !d.expanded }
 func (d Directory) Children() int {
 	count := len(d.Files)
@@ -128,9 +128,12 @@ func (d Directory) Children() int {
 	return count
 }
 func (d Directory) GetStatus() string { return "" }
+func (d Directory) IsVisible() bool {
+	if d.Parent == nil {
+		return true
+	}
 
-func (d Directory) IsExpanded() bool {
-	return d.expanded
+	return d.Parent.IsVisible() && d.Parent.expanded
 }
 
 func (d Directory) IsFullyStaged() bool {
@@ -163,6 +166,7 @@ func (d Directory) GetFilePath() string {
 
 type File struct {
 	Name           string
+	Parent         *Directory
 	Dirpath        string
 	indexStatus    rune
 	workTreeStatus rune
@@ -174,6 +178,7 @@ func (f File) GetName() string {
 
 func (f File) ToggleExpanded()     {}
 func (f File) IsExpanded() bool    { return true }
+func (f File) IsVisible() bool     { return f.Parent.IsVisible() && f.Parent.expanded }
 func (f File) Children() int       { return 0 }
 func (f File) IsFullyStaged() bool { return f.workTreeStatus == '.' }
 func (f File) GetStatus() string   { return string(f.indexStatus) + string(f.workTreeStatus) }
@@ -186,13 +191,13 @@ func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	return File{Name: filename, Dirpath: dirpath, indexStatus: indexStatus, workTreeStatus: workTreeStatus}
 }
 
-func GetStatus(rawStatus string) Directory {
+func GetStatus(rawStatus string) *Directory {
 	lines := strings.Split(rawStatus, "\n")
 
 	// First four lines are branch data so skip them for now
 	lines = lines[4:]
 
-	directory := newDirectory("Root")
+	directory := newDirectory("Root", nil)
 
 	for _, line := range lines {
 		changeType, line := utils.TrimFirstRune(line)
@@ -200,7 +205,7 @@ func GetStatus(rawStatus string) Directory {
 
 		if changeType == Changed {
 			file := parseChangedLine(line)
-			directory = addFile(directory, strings.Split(file.Dirpath, "/"), file)
+			addFile(directory, strings.Split(file.Dirpath, "/"), file)
 		}
 		//   else if changeType == Copied {
 		//
@@ -222,24 +227,26 @@ func parseChangedLine(line string) File {
 	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
 }
 
-func addFile(directory Directory, dirpath []string, newFile File) Directory {
+func addFile(directory *Directory, dirpath []string, newFile File) {
 	if len(dirpath) == 0 || dirpath[0] == "." {
+		newFile.Parent = directory
 		directory.Files = append(directory.Files, newFile)
-		return directory
+		return
 	}
 
-	for i, subdir := range directory.Directories {
+	for _, subdir := range directory.Directories {
 		if subdir.Name == dirpath[0] {
-			directory.Directories[i] = addFile(subdir, dirpath[1:], newFile)
-			return directory
+			addFile(subdir, dirpath[1:], newFile)
+			// directory.Directories[i] = addFile(subdir, dirpath[1:], newFile)
+			return
 		}
 	}
 
-	newDir := newDirectory(dirpath[0])
-	newDir = addFile(newDir, dirpath[1:], newFile)
+	// log.Println(dirpath)
+	newDir := newDirectory(dirpath[0], directory)
+	addFile(newDir, dirpath[1:], newFile)
+	newDir.Parent = directory
 	directory.Directories = append(directory.Directories, newDir)
-
-	return directory
 }
 
 func GetRawDiff(filepath string) string {

@@ -146,13 +146,13 @@ func TestGetStatus(t *testing.T) {
 				workTreeStatus: 46,
 			},
 		},
-		Directories: []Directory{
+		Directories: []*Directory{
 			{
 				Name: "internal",
-				Directories: []Directory{
+				Directories: []*Directory{
 					{
 						Name:        "git",
-						Directories: make([]Directory, 0),
+						Directories: make([]*Directory, 0),
 						Files: []File{
 							{
 								Name:           "git.go",
@@ -170,7 +170,7 @@ func TestGetStatus(t *testing.T) {
 					},
 					{
 						Name:        "utils",
-						Directories: make([]Directory, 0),
+						Directories: make([]*Directory, 0),
 						Files: []File{
 							{
 								Name:           "utils.go",

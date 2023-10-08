@@ -18,12 +18,13 @@ type Model struct {
 	lviewport viewport.Model
 	rviewport viewport.Model
 
-	gitStatus git.Directory
+	gitStatus *git.Directory
 	fileTree  filetree.FileTree
 
 	isFocused bool
-	width     int
-	ready     bool
+
+	width int
+	ready bool
 }
 
 func initModel() Model {

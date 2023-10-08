@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"errors"
 	"git-ui/internal/git"
 	"strings"
 
@@ -30,7 +29,7 @@ func StyleFileTreeLine(file FileTreeItem, selected, focused bool) lipgloss.Style
 
 type FileTreeItem interface {
 	GetName() string
-	IsExpanded() bool
+	IsVisible() bool
 	Children() int
 	GetStatus() string
 	IsFullyStaged() bool
@@ -52,9 +51,9 @@ type FileTree struct {
 	IsFocused     bool
 }
 
-func New(directory git.Directory) FileTree {
+func New(directory *git.Directory) FileTree {
 	return FileTree{
-		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1),
+		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:],
 		currentLine:   0,
 		IsFocused:     true,
 	}
@@ -103,10 +102,7 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 }
 
 func (ft *FileTree) handleEnter() {
-	selectedLine, err := ft.getSelectedLine()
-	if err != nil {
-		return
-	}
+	selectedLine := ft.getSelectedLine()
 
 	switch lineItem := selectedLine.Item.(type) {
 	case *git.Directory:
@@ -114,63 +110,41 @@ func (ft *FileTree) handleEnter() {
 	}
 }
 
-func (ft FileTree) getDisplayedLines() int {
-	count := -1
-	for i := 1; i < len(ft.fileTreeLines); i++ {
-		line := ft.fileTreeLines[i]
-		if !line.Item.IsExpanded() {
-			i += line.Item.Children()
-		}
-
-		count++
-	}
-
-	return count
-}
-
 func (ft *FileTree) cursorDown() {
-	ft.currentLine = min(ft.currentLine+1, ft.getDisplayedLines())
+	for i := ft.currentLine + 1; i < len(ft.fileTreeLines); i++ {
+		newSelectedLine := ft.fileTreeLines[i]
+		if newSelectedLine.Item.IsVisible() {
+			ft.currentLine = i
+			return
+		}
+	}
 }
 
 func (ft *FileTree) cursorUp() {
-	ft.currentLine = max(ft.currentLine-1, 0)
+	for i := ft.currentLine - 1; i >= 0; i-- {
+		newSelectedLine := ft.fileTreeLines[i]
+		if newSelectedLine.Item.IsVisible() {
+			ft.currentLine = i
+			return
+		}
+	}
 }
 
 func (ft FileTree) GetIndex() int {
 	return ft.currentLine
 }
 
-func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
-	index := ft.currentLine
-	for i := 1; i < len(ft.fileTreeLines); i++ {
-		line := ft.fileTreeLines[i]
-
-		if index == 0 {
-			return line, nil
-		}
-
-		if !line.Item.IsExpanded() {
-			i += line.Item.Children()
-		}
-
-		index--
-	}
-
-	var result FileTreeLine
-	return result, errors.New("No line selected")
+func (ft FileTree) getSelectedLine() FileTreeLine {
+	return ft.fileTreeLines[ft.currentLine]
 }
 
 func (ft FileTree) GetSelectedFilepath() string {
-	currentLine, err := ft.getSelectedLine()
-	if err != nil {
-		return ""
-	}
-
+	currentLine := ft.getSelectedLine()
 	return currentLine.Item.GetFilePath()
 }
 
-func newFileTreeLines(directory git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
-	newLine := newFileTreeLine(&directory, depth)
+func newFileTreeLines(directory *git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
+	newLine := newFileTreeLine(directory, depth)
 	fileTree = append(fileTree, newLine)
 
 	for _, subDirectory := range directory.Directories {
@@ -186,36 +160,23 @@ func newFileTreeLines(directory git.Directory, fileTree []FileTreeLine, depth in
 }
 
 func (ft FileTree) Render() string {
-	lines := ft.buildFileTreeString()
-	output := ""
-
-	for _, line := range lines {
-
-		// if i == ft.currentLine {
-		// 	output += ">"
-		// } else {
-		// 	output += " "
-		// }
-		output += line + "\n"
-	}
-
-	return output
+	return strings.Join(ft.buildFileTreeString(), "\n")
 }
 
 func (ft FileTree) buildFileTreeString() []string {
 	output := make([]string, 0)
-	for i := 1; i < len(ft.fileTreeLines); i++ {
+	for i := 0; i < len(ft.fileTreeLines); i++ {
 		line := ft.fileTreeLines[i]
+		if !line.Item.IsVisible() {
+			continue
+		}
 
 		prefix := strings.Repeat("  ", line.Depth) + "-"
 		lineString := prefix + line.Item.GetStatus() + " " + line.Item.GetName()
-		selected := i-1 == ft.currentLine
+
+		selected := i == ft.currentLine
 		style := StyleFileTreeLine(line.Item, selected, ft.IsFocused)
 		output = append(output, style.Render(lineString))
-
-		if !line.Item.IsExpanded() {
-			i += line.Item.Children()
-		}
 	}
 
 	return output
