@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"errors"
 	"git-ui/internal/git"
 	"strings"
 
@@ -30,7 +31,6 @@ func StyleFileTreeLine(file FileTreeItem, selected, focused bool) lipgloss.Style
 type FileTreeItem interface {
 	GetName() string
 	IsExpanded() bool
-	ToggleExpanded()
 	Children() int
 	GetStatus() string
 	IsFullyStaged() bool
@@ -82,6 +82,11 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 		key.WithHelp("up/k", "Up"),
 	)
 
+	enterKeymap := key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "Enter"),
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -89,10 +94,24 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 			ft.cursorDown()
 		case key.Matches(msg, upKeymap):
 			ft.cursorUp()
+		case key.Matches(msg, enterKeymap):
+			ft.handleEnter()
 		}
 	}
 
 	return ft, cmd
+}
+
+func (ft *FileTree) handleEnter() {
+	selectedLine, err := ft.getSelectedLine()
+	if err != nil {
+		return
+	}
+
+	switch lineItem := selectedLine.Item.(type) {
+	case *git.Directory:
+		lineItem.ToggleExpanded()
+	}
 }
 
 func (ft FileTree) getDisplayedLines() int {
@@ -121,13 +140,13 @@ func (ft FileTree) GetIndex() int {
 	return ft.currentLine
 }
 
-func (ft FileTree) GetSelectedFilepath() string {
+func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
 	index := ft.currentLine
 	for i := 1; i < len(ft.fileTreeLines); i++ {
 		line := ft.fileTreeLines[i]
 
 		if index == 0 {
-			return line.Item.GetFilePath()
+			return line, nil
 		}
 
 		if !line.Item.IsExpanded() {
@@ -137,7 +156,17 @@ func (ft FileTree) GetSelectedFilepath() string {
 		index--
 	}
 
-	return ""
+	var result FileTreeLine
+	return result, errors.New("No line selected")
+}
+
+func (ft FileTree) GetSelectedFilepath() string {
+	currentLine, err := ft.getSelectedLine()
+	if err != nil {
+		return ""
+	}
+
+	return currentLine.Item.GetFilePath()
 }
 
 func newFileTreeLines(directory git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {

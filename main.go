@@ -92,13 +92,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			key.WithHelp("left/h", "Left"),
 		)
 
-		returnKey := key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "Return"),
-		)
-
 		switch {
-		case key.Matches(msg, rightKey) || key.Matches(msg, returnKey):
+		case key.Matches(msg, rightKey):
 			m.isFocused = true
 			m.fileTree.IsFocused = false
 		case key.Matches(msg, leftKey):

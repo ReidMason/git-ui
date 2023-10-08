@@ -115,7 +115,8 @@ func newDirectory(name string) Directory {
 	return Directory{Name: name, Files: make([]File, 0), Directories: make([]Directory, 0), expanded: true}
 }
 
-func (d Directory) GetName() string  { return d.Name }
+func (d Directory) GetName() string { return d.Name }
+
 func (d *Directory) ToggleExpanded() { d.expanded = !d.expanded }
 func (d Directory) Children() int {
 	count := len(d.Files)
