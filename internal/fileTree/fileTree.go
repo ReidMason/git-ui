@@ -144,7 +144,7 @@ func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
 		return result, errors.New("No file tree lines to display")
 	}
 
-	return ft.fileTreeLines[min(0, max(len(ft.fileTreeLines)-1, ft.currentLine))], nil
+	return ft.fileTreeLines[max(0, min(len(ft.fileTreeLines)-1, ft.currentLine))], nil
 }
 
 func (ft FileTree) GetSelectedFilepath() string {
