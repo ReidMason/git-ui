@@ -131,6 +131,10 @@ func (ft *FileTree) handleSpace() {
 		git.Unstage(filepath)
 	}
 
+	ft.reloadModel()
+}
+
+func (ft *FileTree) reloadModel() {
 	rawStatus := git.GetRawStatus()
 	directory := git.GetStatus(rawStatus)
 	ft.fileTreeLines = buildFileTreeLines(directory)
