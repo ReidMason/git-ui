@@ -59,10 +59,14 @@ type FileTree struct {
 
 func New(directory *git.Directory) FileTree {
 	return FileTree{
-		fileTreeLines: newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:],
+		fileTreeLines: buildFileTreeLines(directory),
 		cursorIndex:   0,
 		IsFocused:     true,
 	}
+}
+
+func buildFileTreeLines(directory *git.Directory) []FileTreeLine {
+	return newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:]
 }
 
 func (ft FileTree) Update(msg tea.Msg) (FileTree, tea.Cmd) {
@@ -125,6 +129,10 @@ func (ft *FileTree) handleSpace() {
 
 	log.Printf("File to stage: %s", filepath)
 	git.Stage(filepath)
+
+	rawStatus := git.GetRawStatus()
+	directory := git.GetStatus(rawStatus)
+	ft.fileTreeLines = buildFileTreeLines(directory)
 }
 
 func (ft *FileTree) handleEnter() {
