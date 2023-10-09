@@ -265,6 +265,13 @@ func Unstage(filepath string) {
 	}
 }
 
+func Commit(commitMessage string) {
+	_, err := utils.RunCommand("git", "commit", "-m", fmt.Sprintf(`%s`, commitMessage))
+	if err != nil {
+		log.Printf("Got err: %s", err)
+	}
+}
+
 func GetRawDiff(filepath string) string {
 	args := []string{"diff", "--no-ext-diff", "-U1000", "--"}
 	// If it's new we want to add /dev/null instead

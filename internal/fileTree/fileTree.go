@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/erikgeiser/promptkit/textinput"
 )
 
 func styleFileTreeLine(file FileTreeItem) lipgloss.Style {
@@ -100,6 +101,11 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 		key.WithHelp("space", "Space"),
 	)
 
+	cKeymap := key.NewBinding(
+		key.WithKeys("c"),
+		key.WithHelp("c", "Commit"),
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -111,10 +117,36 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 			ft.handleEnter()
 		case key.Matches(msg, spaceKeymap):
 			ft.handleSpace()
+		case key.Matches(msg, cKeymap):
+			ft.handleC()
 		}
 	}
 
 	return ft, cmd
+}
+
+func (ft *FileTree) handleC() {
+	hasStaged := false
+	for _, line := range ft.fileTreeLines {
+		if strings.HasPrefix(line.Item.GetStatus(), "M") {
+			hasStaged = true
+			break
+		}
+	}
+
+	if !hasStaged {
+		return
+	}
+
+	input := textinput.New("Commit message:")
+	input.Placeholder = ""
+
+	filepath, err := input.RunPrompt()
+	if err != nil {
+		return
+	}
+
+	git.Commit(filepath)
 }
 
 func (ft *FileTree) handleSpace() {
