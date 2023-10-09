@@ -3,7 +3,6 @@ package filetree
 import (
 	"errors"
 	"git-ui/internal/git"
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -124,11 +123,13 @@ func (ft *FileTree) handleSpace() {
 		return
 	}
 
-	log.Println("Staging file")
 	filepath := selectedLine.Item.GetFilePath()
 
-	log.Printf("File to stage: %s", filepath)
-	git.Stage(filepath)
+	if strings.HasSuffix(selectedLine.Item.GetStatus(), "M") {
+		git.Stage(filepath)
+	} else {
+		git.Unstage(filepath)
+	}
 
 	rawStatus := git.GetRawStatus()
 	directory := git.GetStatus(rawStatus)
