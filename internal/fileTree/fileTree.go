@@ -3,6 +3,7 @@ package filetree
 import (
 	"errors"
 	"git-ui/internal/git"
+	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -12,7 +13,6 @@ import (
 
 func styleFileTreeLine(file FileTreeItem) lipgloss.Style {
 	style := lipgloss.NewStyle()
-
 	if file.IsFullyStaged() {
 		style = style.Foreground(lipgloss.Color("#a6e3a1"))
 	} else {
@@ -92,6 +92,11 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 		key.WithHelp("enter", "Enter"),
 	)
 
+	spaceKeymap := key.NewBinding(
+		key.WithKeys(" "),
+		key.WithHelp("space", "Space"),
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -101,10 +106,25 @@ func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
 			ft.cursorUp()
 		case key.Matches(msg, enterKeymap):
 			ft.handleEnter()
+		case key.Matches(msg, spaceKeymap):
+			ft.handleSpace()
 		}
 	}
 
 	return ft, cmd
+}
+
+func (ft *FileTree) handleSpace() {
+	selectedLine, err := ft.getSelectedLine()
+	if err != nil {
+		return
+	}
+
+	log.Println("Staging file")
+	filepath := selectedLine.Item.GetFilePath()
+
+	log.Printf("File to stage: %s", filepath)
+	git.Stage(filepath)
 }
 
 func (ft *FileTree) handleEnter() {

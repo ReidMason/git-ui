@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"git-ui/internal/utils"
 	"log"
 	"path/filepath"
@@ -248,6 +249,13 @@ func addFile(directory *Directory, dirpath []string, newFile File) {
 	addFile(newDir, dirpath[1:], newFile)
 	newDir.Parent = directory
 	directory.Directories = append(directory.Directories, newDir)
+}
+
+func Stage(filepath string) {
+	_, err := utils.RunCommand("git", "add", "--", fmt.Sprintf(`%s`, filepath))
+	if err != nil {
+		log.Printf("Got err: %s", err)
+	}
 }
 
 func GetRawDiff(filepath string) string {
