@@ -206,14 +206,7 @@ func (m Model) View() string {
 	// mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, leftDiff, rightDiff)
 	//
 
-	data := "None"
-	if m.state.GetGitStatus().Directory != nil && len(m.state.GetGitStatus().Directory.Files) > 0 {
-		data = m.state.GetGitStatus().Directory.Files[0].Name
-	}
-
-	header := ui.RenderHeader("Git-UI", m.state.GetViewWidth())
-
-	return lipgloss.JoinVertical(lipgloss.Left, header, data)
+	return ui.RenderMainView(m.state.GetViewWidth())
 }
 
 func main() {

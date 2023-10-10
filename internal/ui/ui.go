@@ -20,3 +20,16 @@ func RenderHeader(header string, viewWidth int) string {
 		Width(viewWidth - HeaderStyle.GetHorizontalBorderSize())
 	return headerStyling.Render(header)
 }
+
+func RenderFileTree() string {
+	data := "File tree"
+
+	return BorderStyle.Render(data)
+}
+
+func RenderMainView(viewWidth int) string {
+	header := RenderHeader("Git-UI", viewWidth)
+	fileTree := RenderFileTree()
+
+	return lipgloss.JoinVertical(lipgloss.Left, header, fileTree)
+}
