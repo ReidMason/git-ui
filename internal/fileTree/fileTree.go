@@ -141,35 +141,36 @@ func (ft *FileTree) handleC() {
 	input := textinput.New("Commit message:")
 	input.Placeholder = ""
 
-	filepath, err := input.RunPrompt()
-	if err != nil {
-		return
-	}
+	// filepath, err := input.RunPrompt()
+	// if err != nil {
+	// 	return
+	// }
 
-	git.Commit(filepath)
+	// git.Commit(filepath)
+	ft.reloadModel()
 }
 
 func (ft *FileTree) handleSpace() {
-	selectedLine, err := ft.getSelectedLine()
-	if err != nil {
-		return
-	}
+	// selectedLine, err := ft.getSelectedLine()
+	// if err != nil {
+	// 	return
+	// }
 
-	filepath := selectedLine.Item.GetFilePath()
+	// filepath := selectedLine.Item.GetFilePath()
 
-	if strings.HasSuffix(selectedLine.Item.GetStatus(), "M") {
-		git.Stage(filepath)
-	} else {
-		git.Unstage(filepath)
-	}
+	// if strings.HasSuffix(selectedLine.Item.GetStatus(), "M") {
+	// 	git.Stage(filepath)
+	// } else {
+	// 	git.Unstage(filepath)
+	// }
 
 	ft.reloadModel()
 }
 
 func (ft *FileTree) reloadModel() {
-	rawStatus := git.GetRawStatus()
-	directory := git.GetStatus(rawStatus)
-	ft.fileTreeLines = buildFileTreeLines(directory)
+	// rawStatus := git.GetRawStatus()
+	// directory := git.GetStatus(rawStatus)
+	// ft.fileTreeLines = buildFileTreeLines(directory)
 }
 
 func (ft *FileTree) handleEnter() {
