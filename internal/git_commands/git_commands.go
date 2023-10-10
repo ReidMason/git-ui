@@ -16,6 +16,10 @@ type GitCommandRunner interface {
 
 type GitCommandLine struct{}
 
+func New() GitCommandLine {
+	return GitCommandLine{}
+}
+
 func (g GitCommandLine) Stage(filepath string) {
 	_, err := utils.RunCommand("git", "add", "--", fmt.Sprintf(`%s`, filepath))
 
@@ -40,7 +44,7 @@ func (g GitCommandLine) Commit(commitMessage string) {
 	}
 }
 
-func (g GitCommandLine) GetRawDiff(filepath string) string {
+func (g GitCommandLine) GetDiff(filepath string) string {
 	args := []string{"diff", "--no-ext-diff", "-U1000", "--"}
 	// If it's new we want to add /dev/null instead
 
@@ -55,7 +59,7 @@ func (g GitCommandLine) GetRawDiff(filepath string) string {
 	return result
 }
 
-func (g GitCommandLine) GetRawStatus() string {
+func (g GitCommandLine) GetStatus() string {
 	result, err := utils.RunCommand("git", "status", "-u", "--porcelain=v2", "--branch")
 
 	if err != nil {
