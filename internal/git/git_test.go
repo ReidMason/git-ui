@@ -159,10 +159,9 @@ func TestGetStatus(t *testing.T) {
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go`,
 			expected: func() GitStatus {
 				rootDir := Directory{
-					Name:     "Root",
-					Expanded: true,
-					Parent:   nil,
-					Files:    []File{},
+					Name:   "Root",
+					Parent: nil,
+					Files:  []File{},
 				}
 
 				file := File{
@@ -188,25 +187,22 @@ func TestGetStatus(t *testing.T) {
 1 MM N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e Directory/Internal/lib.go`,
 			expected: func() GitStatus {
 				rootDir := Directory{
-					Name:     "Root",
-					Expanded: true,
-					Parent:   nil,
-					Files:    []File{},
+					Name:   "Root",
+					Parent: nil,
+					Files:  []File{},
 				}
 
 				directory := Directory{
-					Name:     "Directory",
-					Expanded: true,
-					Parent:   &rootDir,
-					Files:    []File{},
+					Name:   "Directory",
+					Parent: &rootDir,
+					Files:  []File{},
 				}
 				rootDir.Directories = append(rootDir.Directories, &directory)
 
 				internalDir := Directory{
-					Name:     "Internal",
-					Expanded: true,
-					Parent:   &directory,
-					Files:    []File{},
+					Name:   "Internal",
+					Parent: &directory,
+					Files:  []File{},
 				}
 				directory.Directories = append(directory.Directories, &internalDir)
 
@@ -263,10 +259,6 @@ func checkDir(directory, expectedDirectory Directory, t *testing.T) {
 		}
 	} else if directory.Parent == nil && expectedDirectory.Parent != nil {
 		t.Fatalf("Expected no parent parent for directory '%s'.", directory.Name)
-	}
-
-	if directory.Expanded != directory.Expanded {
-		t.Fatalf("Wrong expanded value for directory '%s'. Expected: '%s' Got: '%s'", directory.Name, expectedDirectory.Parent.Name, directory.Parent.Name)
 	}
 
 	for i, expectedFile := range expectedDirectory.Files {

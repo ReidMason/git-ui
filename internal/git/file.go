@@ -1,6 +1,9 @@
 package git
 
-import "path/filepath"
+import (
+	filetree "git-ui/internal/fileTree"
+	"path/filepath"
+)
 
 type File struct {
 	Name           string
@@ -10,17 +13,12 @@ type File struct {
 	WorkTreeStatus rune
 }
 
-func (f File) GetName() string {
-	return f.Name
-}
-
-func (f File) ToggleExpanded()     {}
-func (f File) IsExpanded() bool    { return true }
-func (f File) IsVisible() bool     { return f.Parent.IsVisible() && f.Parent.Expanded }
-func (f File) Children() int       { return 0 }
-func (f File) IsFullyStaged() bool { return f.WorkTreeStatus == '.' }
-func (f File) GetStatus() string   { return string(f.IndexStatus) + string(f.WorkTreeStatus) }
-func (f File) GetFilePath() string { return filepath.Join(f.Dirpath, f.Name) }
+func (f File) GetName() string                         { return f.Name }
+func (f File) Children() int                           { return 0 }
+func (f File) GetFilePath() string                     { return filepath.Join(f.Dirpath, f.Name) }
+func (f File) GetDirectories() []filetree.FileTreeItem { return []filetree.FileTreeItem{} }
+func (f File) GetFiles() []filetree.FileTreeItem       { return []filetree.FileTreeItem{} }
+func (f File) IsDirectory() bool                       { return false }
 
 func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)
@@ -44,7 +42,6 @@ func addFile(directory *Directory, dirpath []string, newFile File) {
 		}
 	}
 
-	// log.Println(dirpath)
 	newDir := newDirectory(dirpath[0], directory)
 	addFile(newDir, dirpath[1:], newFile)
 	newDir.Parent = directory

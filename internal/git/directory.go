@@ -1,11 +1,12 @@
 package git
 
+import filetree "git-ui/internal/fileTree"
+
 type Directory struct {
 	Name        string
 	Parent      *Directory
 	Files       []File
 	Directories []*Directory
-	Expanded    bool
 }
 
 func newDirectory(name string, parent *Directory) *Directory {
@@ -13,12 +14,28 @@ func newDirectory(name string, parent *Directory) *Directory {
 		Name:        name,
 		Files:       make([]File, 0),
 		Directories: make([]*Directory, 0),
-		Expanded:    true,
 		Parent:      parent,
 	}
 }
 
-func (d Directory) GetName() string { return d.Name }
+func (d Directory) GetDirectories() []filetree.FileTreeItem {
+	items := make([]filetree.FileTreeItem, len(d.Directories))
+	for i, dir := range d.Directories {
+		items[i] = dir
+	}
+	return items
+}
+
+func (d Directory) GetFiles() []filetree.FileTreeItem {
+	items := make([]filetree.FileTreeItem, len(d.Files))
+	for i, file := range d.Files {
+		items[i] = file
+	}
+	return items
+}
+
+func (d Directory) GetName() string   { return d.Name }
+func (d Directory) IsDirectory() bool { return true }
 func (d Directory) Children() int {
 	count := len(d.Files)
 	for _, directory := range d.Directories {
@@ -27,30 +44,6 @@ func (d Directory) Children() int {
 	}
 
 	return count
-}
-func (d Directory) GetStatus() string { return "" }
-func (d Directory) IsExpanded() bool  { return d.Expanded }
-func (d Directory) IsVisible() bool {
-	if d.Parent == nil {
-		return true
-	}
-
-	return d.Parent.IsVisible() && d.Parent.Expanded
-}
-func (d Directory) IsFullyStaged() bool {
-	for _, file := range d.Files {
-		if !file.IsFullyStaged() {
-			return false
-		}
-	}
-
-	for _, directory := range d.Directories {
-		if !directory.IsFullyStaged() {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (d Directory) GetFilePath() string {
@@ -64,5 +57,3 @@ func (d Directory) GetFilePath() string {
 
 	return ""
 }
-
-func (d *Directory) ToggleExpanded() { d.Expanded = !d.Expanded }

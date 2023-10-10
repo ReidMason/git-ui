@@ -8,7 +8,6 @@ import (
 	"git-ui/internal/state"
 	"git-ui/internal/styling"
 	"git-ui/internal/ui"
-	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -44,6 +43,7 @@ func initModel() Model {
 
 	gitStatus := model.git.GetStatus()
 	model.state.SetGitStatus(gitStatus)
+	model.fileTree = filetree.New(gitStatus.Directory)
 
 	return model
 }
@@ -79,7 +79,6 @@ func (m Model) Init() tea.Cmd {
 // }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Println("Updating")
 	var (
 		// cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -206,7 +205,7 @@ func (m Model) View() string {
 	// mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, leftDiff, rightDiff)
 	//
 
-	return ui.RenderMainView(m.state.GetViewWidth())
+	return ui.RenderMainView(m.state.GetViewWidth(), m.fileTree)
 }
 
 func main() {

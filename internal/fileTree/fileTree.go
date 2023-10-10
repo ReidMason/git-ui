@@ -1,300 +1,375 @@
 package filetree
 
 import (
-	"errors"
-	"git-ui/internal/git"
 	"strings"
-
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/erikgeiser/promptkit/textinput"
 )
 
-func styleFileTreeLine(file FileTreeItem) lipgloss.Style {
-	style := lipgloss.NewStyle()
-	if file.IsFullyStaged() {
-		style = style.Foreground(lipgloss.Color("#a6e3a1"))
-	} else {
-		style = style.Foreground(lipgloss.Color("#f38ba8"))
-	}
-
-	return style
+type Directory struct {
+	item        FileTreeItem
+	parent      *Directory
+	files       []File
+	directories []*Directory
+	isExpanded  bool
 }
 
-func styleFileSelected(selected, focused bool) lipgloss.Style {
-
-	if selected && focused {
-		return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
-	} else if selected {
-		return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("0"))
-	}
-
-	return lipgloss.NewStyle()
+func newDirectory(parent *Directory, item FileTreeItem) Directory {
+	return Directory{parent: nil, item: item, isExpanded: true}
 }
+
+func (d Directory) getName() string {
+	return d.item.GetName()
+}
+
+type File struct {
+	parent *Directory
+	item   FileTreeItem
+}
+
+func (f File) getName() string { return f.item.GetName() }
+
+type FileTreeLine struct {
+	item       FileTreeItem
+	depth      int
+	isExpanded bool
+}
+
+// func (l FileTreeLine) IsVisible() bool {
+// 	if l.Parent == nil {
+// 		return true
+// 	}
+//
+// 	return l.Parent.IsVisible() && d.Parent.Expanded
+// }
 
 type FileTreeItem interface {
 	GetName() string
-	IsVisible() bool
 	Children() int
-	GetStatus() string
-	IsFullyStaged() bool
+	IsDirectory() bool
 	GetFilePath() string
-}
-
-type FileTreeLine struct {
-	Item  FileTreeItem
-	Depth int
-}
-
-func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
-	return FileTreeLine{Item: item, Depth: depth}
+	GetDirectories() []FileTreeItem
+	GetFiles() []FileTreeItem
 }
 
 type FileTree struct {
-	fileTreeLines []FileTreeLine
-	cursorIndex   int
-	IsFocused     bool
+	// fileTreeLines []FileTreeLine
+	root        Directory
+	cursorIndex int
+	isFocused   bool
 }
 
-func New(directory *git.Directory) FileTree {
+func New(directory FileTreeItem) FileTree {
+
 	return FileTree{
-		fileTreeLines: buildFileTreeLines(directory),
-		cursorIndex:   0,
-		IsFocused:     true,
+		root: buildTree(directory),
+		// fileTreeLines: buildFileTreeLines(rootDirectory),
+		cursorIndex: 0,
+		isFocused:   true,
 	}
 }
 
-func buildFileTreeLines(directory *git.Directory) []FileTreeLine {
-	return newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:]
-}
-
-func (ft FileTree) Update(msg tea.Msg) (FileTree, tea.Cmd) {
-	var cmd tea.Cmd
-	ft, cmd = ft.updateAsModel(msg)
-	return ft, cmd
-}
-
-func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
-	var cmd tea.Cmd
-	if !ft.IsFocused {
-		return ft, cmd
-	}
-
-	downKeymap := key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("down/j", "Down"),
-	)
-
-	upKeymap := key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("up/k", "Up"),
-	)
-
-	enterKeymap := key.NewBinding(
-		key.WithKeys("enter"),
-		key.WithHelp("enter", "Enter"),
-	)
-
-	spaceKeymap := key.NewBinding(
-		key.WithKeys(" "),
-		key.WithHelp("space", "Space"),
-	)
-
-	cKeymap := key.NewBinding(
-		key.WithKeys("c"),
-		key.WithHelp("c", "Commit"),
-	)
-
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, downKeymap):
-			ft.cursorDown()
-		case key.Matches(msg, upKeymap):
-			ft.cursorUp()
-		case key.Matches(msg, enterKeymap):
-			ft.handleEnter()
-		case key.Matches(msg, spaceKeymap):
-			ft.handleSpace()
-		case key.Matches(msg, cKeymap):
-			ft.handleC()
-		}
-	}
-
-	return ft, cmd
-}
-
-func (ft *FileTree) handleC() {
-	hasStaged := false
-	for _, line := range ft.fileTreeLines {
-		if strings.HasPrefix(line.Item.GetStatus(), "M") {
-			hasStaged = true
-			break
-		}
-	}
-
-	if !hasStaged {
-		return
-	}
-
-	input := textinput.New("Commit message:")
-	input.Placeholder = ""
-
-	// filepath, err := input.RunPrompt()
-	// if err != nil {
-	// 	return
-	// }
-
-	// git.Commit(filepath)
-	ft.reloadModel()
-}
-
-func (ft *FileTree) handleSpace() {
-	// selectedLine, err := ft.getSelectedLine()
-	// if err != nil {
-	// 	return
-	// }
-
-	// filepath := selectedLine.Item.GetFilePath()
-
-	// if strings.HasSuffix(selectedLine.Item.GetStatus(), "M") {
-	// 	git.Stage(filepath)
-	// } else {
-	// 	git.Unstage(filepath)
-	// }
-
-	ft.reloadModel()
-}
-
-func (ft *FileTree) reloadModel() {
-	// rawStatus := git.GetRawStatus()
-	// directory := git.GetStatus(rawStatus)
-	// ft.fileTreeLines = buildFileTreeLines(directory)
-}
-
-func (ft *FileTree) handleEnter() {
-	selectedLine, err := ft.getSelectedLine()
-	if err != nil {
-		return
-	}
-
-	switch lineItem := selectedLine.Item.(type) {
-	case *git.Directory:
-		lineItem.ToggleExpanded()
-	}
-}
-
-func (ft *FileTree) cursorDown() {
-	for i := ft.cursorIndex + 1; i < len(ft.fileTreeLines); i++ {
-		if ft.updateCursorIndex(i) {
-			return
-		}
-	}
-}
-
-func (ft *FileTree) cursorUp() {
-	for i := ft.cursorIndex - 1; i >= 0; i-- {
-		if ft.updateCursorIndex(i) {
-			return
-		}
-	}
-}
-
-func (ft *FileTree) updateCursorIndex(newIndex int) bool {
-	newSelectedLine := ft.fileTreeLines[newIndex]
-	if newSelectedLine.Item.IsVisible() {
-		ft.cursorIndex = newIndex
-		return true
-	}
-
-	return false
-}
-
-func (ft FileTree) GetIndex() int {
-	return ft.cursorIndex
-}
-
-func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
-	if len(ft.fileTreeLines) == 0 {
-		var result FileTreeLine
-		return result, errors.New("No file tree lines to display")
-	}
-
-	return ft.fileTreeLines[max(0, min(len(ft.fileTreeLines)-1, ft.cursorIndex))], nil
-}
-
-func (ft FileTree) GetSelectedFilepath() string {
-	currentLine, err := ft.getSelectedLine()
-	if err != nil {
-		return ""
-	}
-
-	return currentLine.Item.GetFilePath()
-}
-
-func newFileTreeLines(directory *git.Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
-	newLine := newFileTreeLine(directory, depth)
-	fileTree = append(fileTree, newLine)
-
-	for _, subDirectory := range directory.Directories {
-		fileTree = newFileTreeLines(subDirectory, fileTree, depth+1)
-	}
-
-	for _, file := range directory.Files {
-		newLine := newFileTreeLine(file, depth+1)
-		fileTree = append(fileTree, newLine)
-	}
-
-	return fileTree
+func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
+	return FileTreeLine{item: item, depth: depth, isExpanded: true}
 }
 
 func (ft FileTree) Render() string {
 	return strings.Join(ft.buildFileTreeString(), "\n")
 }
 
-func (ft FileTree) buildFileTreeString() []string {
-	output := make([]string, 0)
+func buildTree(directory FileTreeItem) Directory {
+	rootDirectory := newDirectory(nil, directory)
 
-	if len(ft.fileTreeLines) == 0 {
-		return append(output, "No changes")
+	for _, subDirectory := range directory.GetDirectories() {
+		buildTreeR(&rootDirectory, subDirectory)
 	}
 
-	for i := 0; i < len(ft.fileTreeLines); i++ {
-		line := ft.fileTreeLines[i]
-		if !line.Item.IsVisible() {
-			continue
-		}
+	for _, file := range directory.GetFiles() {
+		newFile := File{parent: &rootDirectory, item: file}
+		rootDirectory.files = append(rootDirectory.files, newFile)
+	}
 
-		prefix := strings.Repeat("  ", line.Depth)
+	return rootDirectory
+}
 
-		icon := " "
-		switch dir := line.Item.(type) {
-		case *git.Directory:
-			if dir.IsExpanded() {
-				icon = "▼"
-			} else {
-				icon = "▶"
-			}
-		}
+func buildTreeR(parent *Directory, directory FileTreeItem) {
+	newDirectory := newDirectory(parent, directory)
 
-		prefix += icon
-		lineString := line.Item.GetStatus() + " " + line.Item.GetName()
-		selected := i == ft.cursorIndex
-		if selected {
-			lineString = lipgloss.PlaceHorizontal(50, lipgloss.Left, lineString)
-		}
+	for _, subDirectory := range directory.GetDirectories() {
+		buildTreeR(&newDirectory, subDirectory)
+	}
 
-		style := styleFileTreeLine(line.Item)
-		lineString = prefix + style.Render(lineString)
+	for _, file := range directory.GetFiles() {
+		newFile := File{parent: &newDirectory, item: file}
+		newDirectory.files = append(newDirectory.files, newFile)
+	}
 
-		if selected {
-			selectedStyling := styleFileSelected(selected, ft.IsFocused)
-			lineString = selectedStyling.Render(lineString)
-		}
+	parent.directories = append(parent.directories, &newDirectory)
+}
+func getIcon(directory Directory) string {
+	if directory.isExpanded {
+		return "▼"
+	}
 
-		output = append(output, lineString)
+	return "▶"
+}
+
+func buildFileOutputString(file File, output []string, depth int) []string {
+	return append(output, strings.Repeat("  ", depth+1)+file.item.GetName())
+}
+
+func buildFileTreeElementOutputString(directory Directory, output []string, depth int) []string {
+	prefix := strings.Repeat("  ", depth) + getIcon(directory)
+	output = append(output, prefix+" "+directory.getName())
+
+	for _, subDirectory := range directory.directories {
+		output = buildFileTreeElementOutputString(*subDirectory, output, depth+1)
+	}
+
+	for _, file := range directory.files {
+		output = buildFileOutputString(file, output, depth+1)
 	}
 
 	return output
 }
+
+func (ft FileTree) buildFileTreeString() []string {
+	output := make([]string, 0)
+
+	if len(ft.root.files)+len(ft.root.directories) == 0 {
+		return append(output, "No changes")
+	}
+
+	return buildFileTreeElementOutputString(ft.root, output, 0)
+
+	// for i := 0; i < len(ft.fileTreeLines); i++ {
+	// 	line := ft.fileTreeLines[i]
+	// 	// if !line.isVisible() {
+	// 	// 	continue
+	// 	// }
+	//
+	// 	prefix := strings.Repeat("  ", line.depth) + getIcon(line)
+	//
+	// 	lineString := line.item.GetName()
+	// 	selected := i == ft.cursorIndex
+	// 	if selected {
+	// 		lineString = lipgloss.PlaceHorizontal(50, lipgloss.Left, lineString)
+	// 	}
+	//
+	// 	// style := styleFileTreeLine(line.Item)
+	// 	// lineString = prefix + style.Render(lineString)
+	//
+	// 	lineString = prefix + line.item.GetName()
+	//
+	// 	// if selected {
+	// 	// 	selectedStyling := styleFileSelected(selected, ft.IsFocused)
+	// 	// 	lineString = selectedStyling.Render(lineString)
+	// 	// }
+	//
+	// 	output = append(output, lineString)
+	// }
+}
+
+// func buildFileTreeLines(directory Directory) []FileTreeLine {
+// 	return newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:]
+// }
+//
+// func newFileTreeLines(directory Directory, fileTree []FileTreeLine, depth int) []FileTreeLine {
+// 	newLine := newFileTreeLine(directory, depth)
+// 	fileTree = append(fileTree, newLine)
+//
+// 	for _, subDirectory := range directory.GetDirectories() {
+// 		fileTree = newFileTreeLines(subDirectory, fileTree, depth+1)
+// 	}
+//
+// 	for _, file := range directory.GetFiles() {
+// 		newLine := newFileTreeLine(file, depth+1)
+// 		fileTree = append(fileTree, newLine)
+// 	}
+//
+// 	return fileTree
+// }
+
+//	func styleFileTreeLine(file FileTreeItem) lipgloss.Style {
+//		style := lipgloss.NewStyle()
+//		if file.IsFullyStaged() {
+//			style = style.Foreground(lipgloss.Color("#a6e3a1"))
+//		} else {
+//			style = style.Foreground(lipgloss.Color("#f38ba8"))
+//		}
+//
+//		return style
+//	}
+//
+// func styleFileSelected(selected, focused bool) lipgloss.Style {
+//
+//		if selected && focused {
+//			return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
+//		} else if selected {
+//			return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("0"))
+//		}
+//
+//		return lipgloss.NewStyle()
+//	}
+//
+//	func (ft FileTree) Update(msg tea.Msg) (FileTree, tea.Cmd) {
+//		var cmd tea.Cmd
+//		ft, cmd = ft.updateAsModel(msg)
+//		return ft, cmd
+//	}
+//
+//	func (ft FileTree) updateAsModel(msg tea.Msg) (FileTree, tea.Cmd) {
+//		var cmd tea.Cmd
+//		if !ft.IsFocused {
+//			return ft, cmd
+//		}
+//
+//		downKeymap := key.NewBinding(
+//			key.WithKeys("down", "j"),
+//			key.WithHelp("down/j", "Down"),
+//		)
+//
+//		upKeymap := key.NewBinding(
+//			key.WithKeys("up", "k"),
+//			key.WithHelp("up/k", "Up"),
+//		)
+//
+//		enterKeymap := key.NewBinding(
+//			key.WithKeys("enter"),
+//			key.WithHelp("enter", "Enter"),
+//		)
+//
+//		spaceKeymap := key.NewBinding(
+//			key.WithKeys(" "),
+//			key.WithHelp("space", "Space"),
+//		)
+//
+//		cKeymap := key.NewBinding(
+//			key.WithKeys("c"),
+//			key.WithHelp("c", "Commit"),
+//		)
+//
+//		switch msg := msg.(type) {
+//		case tea.KeyMsg:
+//			switch {
+//			case key.Matches(msg, downKeymap):
+//				ft.cursorDown()
+//			case key.Matches(msg, upKeymap):
+//				ft.cursorUp()
+//			case key.Matches(msg, enterKeymap):
+//				ft.handleEnter()
+//			case key.Matches(msg, spaceKeymap):
+//				ft.handleSpace()
+//			case key.Matches(msg, cKeymap):
+//				ft.handleC()
+//			}
+//		}
+//
+//		return ft, cmd
+//	}
+//
+//	func (ft *FileTree) handleC() {
+//		hasStaged := false
+//		for _, line := range ft.fileTreeLines {
+//			if strings.HasPrefix(line.Item.GetStatus(), "M") {
+//				hasStaged = true
+//				break
+//			}
+//		}
+//
+//		if !hasStaged {
+//			return
+//		}
+//
+//		input := textinput.New("Commit message:")
+//		input.Placeholder = ""
+//
+//		// filepath, err := input.RunPrompt()
+//		// if err != nil {
+//		// 	return
+//		// }
+//
+//		// git.Commit(filepath)
+//		ft.reloadModel()
+//	}
+//
+//	func (ft *FileTree) handleSpace() {
+//		// selectedLine, err := ft.getSelectedLine()
+//		// if err != nil {
+//		// 	return
+//		// }
+//
+//		// filepath := selectedLine.Item.GetFilePath()
+//
+//		// if strings.HasSuffix(selectedLine.Item.GetStatus(), "M") {
+//		// 	git.Stage(filepath)
+//		// } else {
+//		// 	git.Unstage(filepath)
+//		// }
+//
+//		ft.reloadModel()
+//	}
+//
+//	func (ft *FileTree) reloadModel() {
+//		// rawStatus := git.GetRawStatus()
+//		// directory := git.GetStatus(rawStatus)
+//		// ft.fileTreeLines = buildFileTreeLines(directory)
+//	}
+//
+//	func (ft *FileTree) handleEnter() {
+//		selectedLine, err := ft.getSelectedLine()
+//		if err != nil {
+//			return
+//		}
+//
+//		switch lineItem := selectedLine.Item.(type) {
+//		case *git.Directory:
+//			lineItem.ToggleExpanded()
+//		}
+//	}
+//
+//	func (ft *FileTree) cursorDown() {
+//		for i := ft.cursorIndex + 1; i < len(ft.fileTreeLines); i++ {
+//			if ft.updateCursorIndex(i) {
+//				return
+//			}
+//		}
+//	}
+//
+//	func (ft *FileTree) cursorUp() {
+//		for i := ft.cursorIndex - 1; i >= 0; i-- {
+//			if ft.updateCursorIndex(i) {
+//				return
+//			}
+//		}
+//	}
+//
+//	func (ft *FileTree) updateCursorIndex(newIndex int) bool {
+//		newSelectedLine := ft.fileTreeLines[newIndex]
+//		if newSelectedLine.Item.IsVisible() {
+//			ft.cursorIndex = newIndex
+//			return true
+//		}
+//
+//		return false
+//	}
+//
+//	func (ft FileTree) GetIndex() int {
+//		return ft.cursorIndex
+//	}
+//
+//	func (ft FileTree) getSelectedLine() (FileTreeLine, error) {
+//		if len(ft.fileTreeLines) == 0 {
+//			var result FileTreeLine
+//			return result, errors.New("No file tree lines to display")
+//		}
+//
+//		return ft.fileTreeLines[max(0, min(len(ft.fileTreeLines)-1, ft.cursorIndex))], nil
+//	}
+//
+//	func (ft FileTree) GetSelectedFilepath() string {
+//		currentLine, err := ft.getSelectedLine()
+//		if err != nil {
+//			return ""
+//		}
+//
+//		return currentLine.Item.GetFilePath()
+//	}

@@ -1,6 +1,8 @@
 package ui
 
 import (
+	filetree "git-ui/internal/fileTree"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -21,15 +23,13 @@ func RenderHeader(header string, viewWidth int) string {
 	return headerStyling.Render(header)
 }
 
-func RenderFileTree() string {
-	data := "File tree"
-
-	return BorderStyle.Render(data)
+func RenderFileTree(filetree filetree.FileTree) string {
+	return filetree.Render()
 }
 
-func RenderMainView(viewWidth int) string {
+func RenderMainView(viewWidth int, fileTree filetree.FileTree) string {
 	header := RenderHeader("Git-UI", viewWidth)
-	fileTree := RenderFileTree()
+	fileTreeString := RenderFileTree(fileTree)
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, fileTree)
+	return lipgloss.JoinVertical(lipgloss.Left, header, fileTreeString)
 }
