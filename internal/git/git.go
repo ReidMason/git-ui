@@ -28,7 +28,11 @@ const (
 	untracked StatusChangeType = '?'
 )
 
-func (g Git) GetStatus() *Directory {
+type GitStatus struct {
+	Directory *Directory
+}
+
+func (g Git) GetStatus() GitStatus {
 	rawStatus := g.commandRunner.GetStatus()
 	lines := strings.Split(rawStatus, "\n")
 
@@ -55,7 +59,7 @@ func (g Git) GetStatus() *Directory {
 		// }
 	}
 
-	return directory
+	return GitStatus{Directory: directory}
 }
 
 func parseChangedStatusLine(line string) File {

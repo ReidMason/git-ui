@@ -146,7 +146,7 @@ index 35b5809..4492ac6 100644
 func TestGetStatus(t *testing.T) {
 	testCases := []struct {
 		name, rawStatus string
-		expected        Directory
+		expected        GitStatus
 	}{
 		{
 			name: "Just status",
@@ -156,7 +156,7 @@ func TestGetStatus(t *testing.T) {
 # branch.upstream origin/main
 # branch.ab +0 -0
 1 M. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e main.go`,
-			expected: func() Directory {
+			expected: func() GitStatus {
 				rootDir := Directory{
 					Name:     "Root",
 					Expanded: true,
@@ -173,7 +173,7 @@ func TestGetStatus(t *testing.T) {
 				}
 				rootDir.Files = append(rootDir.Files, file)
 
-				return rootDir
+				return GitStatus{Directory: &rootDir}
 			}(),
 		},
 		{
@@ -185,7 +185,7 @@ func TestGetStatus(t *testing.T) {
 # branch.ab +0 -0
 1 .. N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e Directory/Internal/main.go
 1 MM N... 100644 100644 100644 1cdd739f6591c3aca07eab977748142a1ba14056 c345bc6f17650da4f51350e8faa56e4f4c61663e Directory/Internal/lib.go`,
-			expected: func() Directory {
+			expected: func() GitStatus {
 				rootDir := Directory{
 					Name:     "Root",
 					Expanded: true,
@@ -227,7 +227,7 @@ func TestGetStatus(t *testing.T) {
 				}
 				internalDir.Files = append(internalDir.Files, lib)
 
-				return rootDir
+				return GitStatus{Directory: &rootDir}
 			}(),
 		},
 	}
@@ -239,7 +239,7 @@ func TestGetStatus(t *testing.T) {
 
 		result := git.GetStatus()
 
-		checkDir(*result, tc.expected, t)
+		checkDir(*result.Directory, *tc.expected.Directory, t)
 	}
 }
 
