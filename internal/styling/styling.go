@@ -13,11 +13,6 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("62"))
 
-	HeaderStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("62")).
-			Align(lipgloss.Position(0.5))
-
 	GreyOutStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4b5161"))
 

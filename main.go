@@ -7,6 +7,7 @@ import (
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/state"
 	"git-ui/internal/styling"
+	"git-ui/internal/ui"
 	"log"
 	"os"
 
@@ -30,15 +31,11 @@ type Model struct {
 	lviewport viewport.Model
 	rviewport viewport.Model
 	fileTree  filetree.FileTree
-	width     int
 	ready     bool
 }
 
 func initModel() Model {
 	gitCommands := gitcommands.New()
-
-	// gitStatus := git.GetStatus()
-	// fileTree := filetree.New(gitStatus)
 
 	model := Model{
 		git:   git.New(gitCommands),
@@ -119,8 +116,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		default:
 			// m.state.SetMessage(msg.String())
 		}
-		//
-		// case tea.WindowSizeMsg:
+	case tea.WindowSizeMsg:
+		m.state.SetViewWidth(msg.Width)
 		// 	m.width = msg.Width
 		// 	availableWidth := m.width
 		// 	columnWidth := availableWidth / 12
@@ -187,9 +184,6 @@ func formatDiff(viewport viewport.Model, focused bool) string {
 
 func (m Model) View() string {
 	// takenWidth := m.lviewport.Width * 2
-	headerStyling := styling.HeaderStyle.
-		Width(m.width - styling.HeaderStyle.GetHorizontalBorderSize())
-	header := headerStyling.Render("Git-UI")
 	//
 	// leftDiff := formatDiff(m.lviewport, m.isFocused)
 	// rightDiff := formatDiff(m.rviewport, m.isFocused)
@@ -216,6 +210,8 @@ func (m Model) View() string {
 	if m.state.GetGitStatus().Directory != nil && len(m.state.GetGitStatus().Directory.Files) > 0 {
 		data = m.state.GetGitStatus().Directory.Files[0].Name
 	}
+
+	header := ui.RenderHeader("Git-UI", m.state.GetViewWidth())
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, data)
 }
