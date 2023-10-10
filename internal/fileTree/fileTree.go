@@ -2,6 +2,8 @@ package filetree
 
 import (
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 type Directory struct {
@@ -10,22 +12,18 @@ type Directory struct {
 	files       []File
 	directories []*Directory
 	isExpanded  bool
+	selected    bool
 }
 
 func newDirectory(parent *Directory, item FileTreeItem) Directory {
 	return Directory{parent: nil, item: item, isExpanded: true}
 }
 
-func (d Directory) getName() string {
-	return d.item.GetName()
-}
-
 type File struct {
-	parent *Directory
-	item   FileTreeItem
+	parent   *Directory
+	item     FileTreeItem
+	selected bool
 }
-
-func (f File) getName() string { return f.item.GetName() }
 
 type FileTreeLine struct {
 	item       FileTreeItem
@@ -113,12 +111,25 @@ func getIcon(directory Directory) string {
 }
 
 func buildFileOutputString(file File, output []string, depth int) []string {
-	return append(output, strings.Repeat("  ", depth+1)+file.item.GetName())
+	line := strings.Repeat("  ", depth+1) + file.item.GetName()
+
+	if file.selected {
+		selectedStyling := styleFileSelected(file.selected)
+		line = selectedStyling.Render(line)
+	}
+	return append(output, line)
 }
 
 func buildFileTreeElementOutputString(directory Directory, output []string, depth int) []string {
-	prefix := strings.Repeat("  ", depth) + getIcon(directory)
-	output = append(output, prefix+" "+directory.getName())
+	line := strings.Repeat("  ", depth) + getIcon(directory)
+	line += " " + directory.item.GetName()
+
+	if directory.selected {
+		selectedStyling := styleFileSelected(directory.selected)
+		line = selectedStyling.Render(line)
+	}
+
+	output = append(output, line)
 
 	for _, subDirectory := range directory.directories {
 		output = buildFileTreeElementOutputString(*subDirectory, output, depth+1)
@@ -137,6 +148,9 @@ func (ft FileTree) buildFileTreeString() []string {
 	if len(ft.root.files)+len(ft.root.directories) == 0 {
 		return append(output, "No changes")
 	}
+
+	// Remove this it's only for testing
+	ft.root.directories[0].selected = true
 
 	return buildFileTreeElementOutputString(ft.root, output, 0)
 
@@ -168,6 +182,17 @@ func (ft FileTree) buildFileTreeString() []string {
 	// }
 }
 
+func styleFileSelected(selected bool) lipgloss.Style {
+	if selected {
+		return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
+	}
+	//  else if selected {
+	// 	return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("0"))
+	// }
+
+	return lipgloss.NewStyle()
+}
+
 // func buildFileTreeLines(directory Directory) []FileTreeLine {
 // 	return newFileTreeLines(directory, make([]FileTreeLine, 0), -1)[1:]
 // }
@@ -197,17 +222,6 @@ func (ft FileTree) buildFileTreeString() []string {
 //		}
 //
 //		return style
-//	}
-//
-// func styleFileSelected(selected, focused bool) lipgloss.Style {
-//
-//		if selected && focused {
-//			return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
-//		} else if selected {
-//			return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("0"))
-//		}
-//
-//		return lipgloss.NewStyle()
 //	}
 //
 //	func (ft FileTree) Update(msg tea.Msg) (FileTree, tea.Cmd) {
