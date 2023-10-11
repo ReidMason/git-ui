@@ -1,8 +1,11 @@
 package filetree
 
 import (
+	"log"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -63,6 +66,36 @@ func New(directory FileTreeItem) FileTree {
 		cursorIndex: 0,
 		isFocused:   true,
 	}
+}
+
+func (ft FileTree) Update(msg tea.Msg) {
+	keyDown := key.NewBinding(
+		key.WithKeys("down", "j"),
+		key.WithHelp("down/j", "Down"),
+	)
+
+	keyUp := key.NewBinding(
+		key.WithKeys("up", "k"),
+		key.WithHelp("up/k", "Up"),
+	)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, keyDown):
+			ft.handleKeyDown()
+		case key.Matches(msg, keyUp):
+			ft.handleKeyUp()
+		}
+	}
+}
+
+func (ft FileTree) handleKeyDown() {
+	log.Println("Down")
+}
+
+func (ft FileTree) handleKeyUp() {
+	log.Println("Up")
 }
 
 func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
