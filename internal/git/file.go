@@ -1,8 +1,19 @@
 package git
 
 import (
+	"fmt"
 	filetree "git-ui/internal/fileTree"
 	"path/filepath"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+var (
+	StagedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#a6e3a1"))
+
+	UnstagedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#f38ba8"))
 )
 
 type File struct {
@@ -13,7 +24,17 @@ type File struct {
 	WorkTreeStatus rune
 }
 
-func (f File) GetName() string                         { return f.Name }
+func (f File) GetDisplay() string {
+	line := fmt.Sprintf("%s%s %s", string(f.IndexStatus), string(f.WorkTreeStatus), f.Name)
+
+	if f.WorkTreeStatus == '.' {
+		return StagedStyle.Render(line)
+	} else if f.WorkTreeStatus == 'M' {
+		return UnstagedStyle.Render(line)
+	}
+
+	return line
+}
 func (f File) Children() int                           { return 0 }
 func (f File) GetFilePath() string                     { return filepath.Join(f.Dirpath, f.Name) }
 func (f File) GetDirectories() []filetree.FileTreeItem { return []filetree.FileTreeItem{} }

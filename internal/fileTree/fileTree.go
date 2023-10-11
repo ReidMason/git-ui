@@ -54,7 +54,7 @@ type FileTreeLine struct {
 }
 
 type FileTreeItem interface {
-	GetName() string
+	GetDisplay() string
 	Children() int
 	IsDirectory() bool
 	GetFilePath() string
@@ -187,7 +187,7 @@ func getIcon(directory Directory) string {
 
 func buildFileOutputString(file File, output []string, depth int) []string {
 	line := strings.Repeat(" ", depth+3)
-	line += file.item.GetName()
+	line += file.item.GetDisplay()
 
 	if file.selected {
 		selectedStyling := styleFileSelected(file.selected)
@@ -198,7 +198,7 @@ func buildFileOutputString(file File, output []string, depth int) []string {
 
 func buildFileTreeElementOutputString(directory Directory, output []string, depth int) []string {
 	line := strings.Repeat("  ", depth) + getIcon(directory)
-	line += " " + directory.item.GetName()
+	line += " " + directory.item.GetDisplay()
 
 	if directory.selected {
 		selectedStyling := styleFileSelected(directory.selected)
