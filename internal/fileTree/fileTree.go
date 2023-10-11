@@ -228,7 +228,15 @@ func (ft FileTree) buildFileTreeString() []string {
 		return append(output, "No changes")
 	}
 
-	return buildFileTreeElementOutputString(ft.root, output, 0)
+	for _, subDirectory := range ft.root.directories {
+		output = buildFileTreeElementOutputString(*subDirectory, output, 0)
+	}
+
+	for _, file := range ft.root.files {
+		output = buildFileOutputString(*file, output, 0)
+	}
+
+	return output
 
 	// for i := 0; i < len(ft.fileTreeLines); i++ {
 	// 	line := ft.fileTreeLines[i]
