@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -11,6 +12,7 @@ import (
 type FileTreeElement interface {
 	setSelected(selected bool)
 	toggleExpanded()
+	isVisible() bool
 }
 
 type Directory struct {
@@ -23,11 +25,18 @@ type Directory struct {
 }
 
 func newDirectory(parent *Directory, item FileTreeItem) Directory {
-	return Directory{parent: nil, item: item, expanded: true}
+	return Directory{parent: parent, item: item, expanded: true}
 }
 
 func (d *Directory) setSelected(selected bool) { d.selected = selected }
 func (d *Directory) toggleExpanded()           { d.expanded = !d.expanded }
+func (d Directory) isVisible() bool {
+	if d.parent == nil {
+		return true
+	}
+
+	return d.parent.isVisible() && d.parent.expanded
+}
 
 type File struct {
 	parent   *Directory
@@ -37,20 +46,13 @@ type File struct {
 
 func (f *File) setSelected(selected bool) { f.selected = selected }
 func (f *File) toggleExpanded()           {}
+func (f File) isVisible() bool            { return f.parent.isVisible() && f.parent.expanded }
 
 type FileTreeLine struct {
 	item       FileTreeItem
 	depth      int
 	isExpanded bool
 }
-
-// func (l FileTreeLine) IsVisible() bool {
-// 	if l.Parent == nil {
-// 		return true
-// 	}
-//
-// 	return l.Parent.IsVisible() && d.Parent.Expanded
-// }
 
 type FileTreeItem interface {
 	GetName() string
@@ -110,24 +112,27 @@ func (ft *FileTree) Update(msg tea.Msg) {
 }
 
 func (ft *FileTree) handleKeyDown() {
-	if ft.cursorIndex >= len(ft.fileTreeItems)-1 {
-		return
+	for i := ft.cursorIndex + 1; i < len(ft.fileTreeItems); i++ {
+		if ft.fileTreeItems[i].isVisible() {
+			ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+			ft.cursorIndex = i
+			ft.fileTreeItems[i].setSelected(true)
+			break
+		}
 	}
-
-	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
-	ft.cursorIndex += 1
-	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
 }
 
 func (ft *FileTree) handleKeyUp() {
-	if ft.cursorIndex <= 0 {
-		return
+	log.Println("Handle")
+	for i := ft.cursorIndex - 1; i >= 0; i-- {
+		log.Println(i)
+		if ft.fileTreeItems[i].isVisible() {
+			ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+			ft.cursorIndex = i
+			ft.fileTreeItems[i].setSelected(true)
+			break
+		}
 	}
-
-	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
-	ft.cursorIndex -= 1
-	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
-
 }
 
 func (ft *FileTree) handleKeyEnter() {
@@ -202,6 +207,10 @@ func buildFileTreeElementOutputString(directory Directory, output []string, dept
 	}
 
 	output = append(output, line)
+
+	if !directory.expanded {
+		return output
+	}
 
 	for _, subDirectory := range directory.directories {
 		output = buildFileTreeElementOutputString(*subDirectory, output, depth+1)

@@ -173,6 +173,7 @@ func formatDiff(viewport viewport.Model, focused bool) string {
 
 	borderColour := "60"
 	if focused {
+
 		borderColour = "62"
 	}
 
