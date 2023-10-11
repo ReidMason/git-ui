@@ -10,6 +10,7 @@ import (
 
 type FileTreeElement interface {
 	setSelected(selected bool)
+	toggleExpanded()
 }
 
 type Directory struct {
@@ -17,17 +18,16 @@ type Directory struct {
 	parent      *Directory
 	files       []*File
 	directories []*Directory
-	isExpanded  bool
+	expanded    bool
 	selected    bool
 }
 
 func newDirectory(parent *Directory, item FileTreeItem) Directory {
-	return Directory{parent: nil, item: item, isExpanded: true}
+	return Directory{parent: nil, item: item, expanded: true}
 }
 
-func (d *Directory) setSelected(selected bool) {
-	d.selected = selected
-}
+func (d *Directory) setSelected(selected bool) { d.selected = selected }
+func (d *Directory) toggleExpanded()           { d.expanded = !d.expanded }
 
 type File struct {
 	parent   *Directory
@@ -35,9 +35,8 @@ type File struct {
 	selected bool
 }
 
-func (f *File) setSelected(selected bool) {
-	f.selected = selected
-}
+func (f *File) setSelected(selected bool) { f.selected = selected }
+func (f *File) toggleExpanded()           {}
 
 type FileTreeLine struct {
 	item       FileTreeItem
@@ -92,6 +91,11 @@ func (ft *FileTree) Update(msg tea.Msg) {
 		key.WithHelp("up/k", "Up"),
 	)
 
+	keyEnter := key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "Enter"),
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -99,6 +103,8 @@ func (ft *FileTree) Update(msg tea.Msg) {
 			ft.handleKeyDown()
 		case key.Matches(msg, keyUp):
 			ft.handleKeyUp()
+		case key.Matches(msg, keyEnter):
+			ft.handleKeyEnter()
 		}
 	}
 }
@@ -122,6 +128,11 @@ func (ft *FileTree) handleKeyUp() {
 	ft.cursorIndex -= 1
 	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
 
+}
+
+func (ft *FileTree) handleKeyEnter() {
+	selected := ft.fileTreeItems[ft.cursorIndex]
+	selected.toggleExpanded()
 }
 
 func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
@@ -164,7 +175,7 @@ func (ft *FileTree) buildTreeR(parent *Directory, directory FileTreeItem) {
 }
 
 func getIcon(directory Directory) string {
-	if directory.isExpanded {
+	if directory.expanded {
 		return "▼"
 	}
 
