@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -9,10 +8,14 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type FileTreeElement interface {
+	setSelected(selected bool)
+}
+
 type Directory struct {
 	item        FileTreeItem
 	parent      *Directory
-	files       []File
+	files       []*File
 	directories []*Directory
 	isExpanded  bool
 	selected    bool
@@ -22,10 +25,18 @@ func newDirectory(parent *Directory, item FileTreeItem) Directory {
 	return Directory{parent: nil, item: item, isExpanded: true}
 }
 
+func (d *Directory) setSelected(selected bool) {
+	d.selected = selected
+}
+
 type File struct {
 	parent   *Directory
 	item     FileTreeItem
 	selected bool
+}
+
+func (f *File) setSelected(selected bool) {
+	f.selected = selected
 }
 
 type FileTreeLine struct {
@@ -52,23 +63,25 @@ type FileTreeItem interface {
 }
 
 type FileTree struct {
-	// fileTreeLines []FileTreeLine
-	root        Directory
-	cursorIndex int
-	isFocused   bool
+	fileTreeItems []FileTreeElement
+	root          Directory
+	cursorIndex   int
+	isFocused     bool
 }
 
 func New(directory FileTreeItem) FileTree {
-
-	return FileTree{
-		root: buildTree(directory),
+	fileTree := FileTree{
 		// fileTreeLines: buildFileTreeLines(rootDirectory),
 		cursorIndex: 0,
 		isFocused:   true,
 	}
+
+	fileTree.buildTree(directory)
+
+	return fileTree
 }
 
-func (ft FileTree) Update(msg tea.Msg) {
+func (ft *FileTree) Update(msg tea.Msg) {
 	keyDown := key.NewBinding(
 		key.WithKeys("down", "j"),
 		key.WithHelp("down/j", "Down"),
@@ -90,12 +103,25 @@ func (ft FileTree) Update(msg tea.Msg) {
 	}
 }
 
-func (ft FileTree) handleKeyDown() {
-	log.Println("Down")
+func (ft *FileTree) handleKeyDown() {
+	if ft.cursorIndex >= len(ft.fileTreeItems)-1 {
+		return
+	}
+
+	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+	ft.cursorIndex += 1
+	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
 }
 
-func (ft FileTree) handleKeyUp() {
-	log.Println("Up")
+func (ft *FileTree) handleKeyUp() {
+	if ft.cursorIndex <= 0 {
+		return
+	}
+
+	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+	ft.cursorIndex -= 1
+	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
+
 }
 
 func newFileTreeLine(item FileTreeItem, depth int) FileTreeLine {
@@ -106,35 +132,37 @@ func (ft FileTree) Render() string {
 	return strings.Join(ft.buildFileTreeString(), "\n")
 }
 
-func buildTree(directory FileTreeItem) Directory {
-	rootDirectory := newDirectory(nil, directory)
+func (ft *FileTree) buildTree(directory FileTreeItem) {
+	ft.root = newDirectory(nil, directory)
 
 	for _, subDirectory := range directory.GetDirectories() {
-		buildTreeR(&rootDirectory, subDirectory)
+		ft.buildTreeR(&ft.root, subDirectory)
 	}
 
 	for _, file := range directory.GetFiles() {
-		newFile := File{parent: &rootDirectory, item: file}
-		rootDirectory.files = append(rootDirectory.files, newFile)
+		newFile := File{parent: &ft.root, item: file}
+		ft.fileTreeItems = append(ft.fileTreeItems, &newFile)
+		ft.root.files = append(ft.root.files, &newFile)
 	}
-
-	return rootDirectory
 }
 
-func buildTreeR(parent *Directory, directory FileTreeItem) {
+func (ft *FileTree) buildTreeR(parent *Directory, directory FileTreeItem) {
 	newDirectory := newDirectory(parent, directory)
+	ft.fileTreeItems = append(ft.fileTreeItems, &newDirectory)
 
 	for _, subDirectory := range directory.GetDirectories() {
-		buildTreeR(&newDirectory, subDirectory)
+		ft.buildTreeR(&newDirectory, subDirectory)
 	}
 
 	for _, file := range directory.GetFiles() {
 		newFile := File{parent: &newDirectory, item: file}
-		newDirectory.files = append(newDirectory.files, newFile)
+		ft.fileTreeItems = append(ft.fileTreeItems, &newFile)
+		newDirectory.files = append(newDirectory.files, &newFile)
 	}
 
 	parent.directories = append(parent.directories, &newDirectory)
 }
+
 func getIcon(directory Directory) string {
 	if directory.isExpanded {
 		return "▼"
@@ -169,7 +197,7 @@ func buildFileTreeElementOutputString(directory Directory, output []string, dept
 	}
 
 	for _, file := range directory.files {
-		output = buildFileOutputString(file, output, depth+1)
+		output = buildFileOutputString(*file, output, depth+1)
 	}
 
 	return output
@@ -183,7 +211,7 @@ func (ft FileTree) buildFileTreeString() []string {
 	}
 
 	// Remove this it's only for testing
-	ft.root.directories[0].selected = true
+	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
 
 	return buildFileTreeElementOutputString(ft.root, output, 0)
 
