@@ -71,12 +71,11 @@ type FileTree struct {
 
 func New(directory FileTreeItem) FileTree {
 	fileTree := FileTree{
-		// fileTreeLines: buildFileTreeLines(rootDirectory),
-		cursorIndex: 0,
-		isFocused:   true,
+		isFocused: true,
 	}
 
 	fileTree.buildTree(directory)
+	fileTree.setCursorIndex(0)
 
 	return fileTree
 }
@@ -228,9 +227,6 @@ func (ft FileTree) buildFileTreeString() []string {
 	if len(ft.root.files)+len(ft.root.directories) == 0 {
 		return append(output, "No changes")
 	}
-
-	// Remove this it's only for testing
-	ft.fileTreeItems[ft.cursorIndex].setSelected(true)
 
 	return buildFileTreeElementOutputString(ft.root, output, 0)
 
