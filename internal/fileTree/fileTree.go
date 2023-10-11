@@ -1,7 +1,6 @@
 package filetree
 
 import (
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -114,25 +113,25 @@ func (ft *FileTree) Update(msg tea.Msg) {
 func (ft *FileTree) handleKeyDown() {
 	for i := ft.cursorIndex + 1; i < len(ft.fileTreeItems); i++ {
 		if ft.fileTreeItems[i].isVisible() {
-			ft.fileTreeItems[ft.cursorIndex].setSelected(false)
-			ft.cursorIndex = i
-			ft.fileTreeItems[i].setSelected(true)
+			ft.setCursorIndex(i)
 			break
 		}
 	}
 }
 
 func (ft *FileTree) handleKeyUp() {
-	log.Println("Handle")
 	for i := ft.cursorIndex - 1; i >= 0; i-- {
-		log.Println(i)
 		if ft.fileTreeItems[i].isVisible() {
-			ft.fileTreeItems[ft.cursorIndex].setSelected(false)
-			ft.cursorIndex = i
-			ft.fileTreeItems[i].setSelected(true)
+			ft.setCursorIndex(i)
 			break
 		}
 	}
+}
+
+func (ft *FileTree) setCursorIndex(cursorIndex int) {
+	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+	ft.cursorIndex = cursorIndex
+	ft.fileTreeItems[cursorIndex].setSelected(true)
 }
 
 func (ft *FileTree) handleKeyEnter() {
