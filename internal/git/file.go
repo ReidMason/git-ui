@@ -44,7 +44,6 @@ func (f File) GetDisplay() string {
 
 	return lipgloss.JoinHorizontal(0, indexStatus, worktreeStatusAndName)
 }
-func (f File) Children() int                           { return 0 }
 func (f File) GetFilePath() string                     { return filepath.Join(f.Dirpath, f.Name) }
 func (f File) GetDirectories() []filetree.FileTreeItem { return []filetree.FileTreeItem{} }
 func (f File) GetFiles() []filetree.FileTreeItem       { return []filetree.FileTreeItem{} }

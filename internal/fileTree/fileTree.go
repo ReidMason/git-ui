@@ -56,7 +56,6 @@ type FileTreeLine struct {
 
 type FileTreeItem interface {
 	GetDisplay() string
-	Children() int
 	IsDirectory() bool
 	GetFilePath() string
 	GetDirectories() []FileTreeItem
@@ -136,6 +135,7 @@ func (ft *FileTree) setCursorIndex(cursorIndex int) {
 		return
 	}
 	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+
 	ft.cursorIndex = cursorIndex
 	ft.fileTreeItems[cursorIndex].setSelected(true)
 }

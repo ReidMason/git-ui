@@ -36,15 +36,6 @@ func (d Directory) GetFiles() []filetree.FileTreeItem {
 
 func (d Directory) GetDisplay() string { return d.Name }
 func (d Directory) IsDirectory() bool  { return true }
-func (d Directory) Children() int {
-	count := len(d.Files)
-	for _, directory := range d.Directories {
-		count++
-		count += directory.Children()
-	}
-
-	return count
-}
 
 func (d Directory) GetFilePath() string {
 	if len(d.Files) > 0 {
