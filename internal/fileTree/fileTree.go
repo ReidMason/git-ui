@@ -67,6 +67,7 @@ type FileTree struct {
 	root          Directory
 	cursorIndex   int
 	isFocused     bool
+	width         int
 }
 
 func New(directory FileTreeItem) FileTree {
@@ -106,6 +107,8 @@ func (ft *FileTree) Update(msg tea.Msg) {
 		case key.Matches(msg, keyEnter):
 			ft.handleKeyEnter()
 		}
+	case tea.WindowSizeMsg:
+		ft.width = msg.Width
 	}
 }
 
@@ -185,24 +188,23 @@ func getIcon(directory Directory) string {
 	return "▶"
 }
 
-func buildFileOutputString(file File, output []string, depth int) []string {
+func buildFileOutputString(file File, output []string, depth int, width int) []string {
 	line := strings.Repeat(" ", depth+3)
 	line += file.item.GetDisplay()
 
 	if file.selected {
-		selectedStyling := styleFileSelected(file.selected)
-		line = selectedStyling.Render(line)
+		line = getSelectedStyle(line, width)
 	}
+
 	return append(output, line)
 }
 
-func buildFileTreeElementOutputString(directory Directory, output []string, depth int) []string {
+func buildFileTreeElementOutputString(directory Directory, output []string, depth int, width int) []string {
 	line := strings.Repeat("  ", depth) + getIcon(directory)
 	line += " " + directory.item.GetDisplay()
 
 	if directory.selected {
-		selectedStyling := styleFileSelected(directory.selected)
-		line = selectedStyling.Render(line)
+		line = getSelectedStyle(line, width)
 	}
 
 	output = append(output, line)
@@ -212,11 +214,11 @@ func buildFileTreeElementOutputString(directory Directory, output []string, dept
 	}
 
 	for _, subDirectory := range directory.directories {
-		output = buildFileTreeElementOutputString(*subDirectory, output, depth+1)
+		output = buildFileTreeElementOutputString(*subDirectory, output, depth+1, width)
 	}
 
 	for _, file := range directory.files {
-		output = buildFileOutputString(*file, output, depth+1)
+		output = buildFileOutputString(*file, output, depth+1, width)
 	}
 
 	return output
@@ -230,23 +232,23 @@ func (ft FileTree) buildFileTreeString() []string {
 	}
 
 	for _, subDirectory := range ft.root.directories {
-		output = buildFileTreeElementOutputString(*subDirectory, output, 0)
+		output = buildFileTreeElementOutputString(*subDirectory, output, 0, ft.width)
 	}
 
 	for _, file := range ft.root.files {
-		output = buildFileOutputString(*file, output, -3)
+		output = buildFileOutputString(*file, output, -3, ft.width)
 	}
 
 	return output
 }
 
-func styleFileSelected(selected bool) lipgloss.Style {
-	if selected {
-		return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
-	}
+func getSelectedStyle(line string, width int) string {
+	selectedStyling := lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
+	line = strings.TrimSuffix(line, "\x1b[0m")
+	line = lipgloss.PlaceHorizontal(width-2, lipgloss.Left, line)
+	return selectedStyling.Render(line)
+
 	//  else if selected {
 	// 	return lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("0"))
 	// }
-
-	return lipgloss.NewStyle()
 }

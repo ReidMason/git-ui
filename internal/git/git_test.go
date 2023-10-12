@@ -169,7 +169,7 @@ func TestGetStatus(t *testing.T) {
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    'M',
-					WorkTreeStatus: '.',
+					WorktreeStatus: '.',
 				}
 				rootDir.Files = append(rootDir.Files, file)
 
@@ -211,7 +211,7 @@ func TestGetStatus(t *testing.T) {
 					Dirpath:        "Directory/Internal",
 					Parent:         &internalDir,
 					IndexStatus:    '.',
-					WorkTreeStatus: '.',
+					WorktreeStatus: '.',
 				}
 				internalDir.Files = append(internalDir.Files, file)
 
@@ -220,7 +220,7 @@ func TestGetStatus(t *testing.T) {
 					Dirpath:        "Directory/Internal",
 					Parent:         &internalDir,
 					IndexStatus:    'M',
-					WorkTreeStatus: 'M',
+					WorktreeStatus: 'M',
 				}
 				internalDir.Files = append(internalDir.Files, lib)
 
@@ -289,7 +289,7 @@ func checkFile(file, expectedFile File, t *testing.T) {
 		t.Fatalf("Wrong index status for file '%s'. Expected: '%d' Got: '%d'", file.Name, expectedFile.IndexStatus, file.IndexStatus)
 	}
 
-	if file.WorkTreeStatus != expectedFile.WorkTreeStatus {
-		t.Fatalf("Wrong work tree status for file '%s'. Expected: '%d' Got: '%d'", file.Name, expectedFile.WorkTreeStatus, file.WorkTreeStatus)
+	if file.WorktreeStatus != expectedFile.WorktreeStatus {
+		t.Fatalf("Wrong work tree status for file '%s'. Expected: '%d' Got: '%d'", file.Name, expectedFile.WorktreeStatus, file.WorktreeStatus)
 	}
 }

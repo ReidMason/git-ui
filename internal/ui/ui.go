@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"git-ui/internal/colours"
 	filetree "git-ui/internal/fileTree"
 
 	"github.com/charmbracelet/lipgloss"
@@ -10,7 +11,7 @@ var (
 	BorderStyle = lipgloss.
 			NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("62"))
+			BorderForeground(lipgloss.Color(colours.Blue))
 
 	HeaderStyle = lipgloss.NewStyle().
 			Align(lipgloss.Center).
@@ -20,11 +21,12 @@ var (
 func RenderHeader(header string, viewWidth int) string {
 	headerStyling := HeaderStyle.
 		Width(viewWidth - HeaderStyle.GetHorizontalBorderSize())
+
 	return headerStyling.Render(header)
 }
 
 func RenderFileTree(filetree filetree.FileTree) string {
-	return filetree.Render()
+	return BorderStyle.Render(filetree.Render())
 }
 
 func RenderMainView(viewWidth int, fileTree filetree.FileTree) string {

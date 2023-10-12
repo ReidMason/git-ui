@@ -4,6 +4,7 @@ import (
 	"fmt"
 	filetree "git-ui/internal/fileTree"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -21,19 +22,28 @@ type File struct {
 	Parent         *Directory
 	Dirpath        string
 	IndexStatus    rune
-	WorkTreeStatus rune
+	WorktreeStatus rune
 }
 
 func (f File) GetDisplay() string {
-	line := fmt.Sprintf("%s%s %s", string(f.IndexStatus), string(f.WorkTreeStatus), f.Name)
-
-	if f.WorkTreeStatus == '.' {
-		return StagedStyle.Render(line)
-	} else if f.WorkTreeStatus == 'M' {
-		return UnstagedStyle.Render(line)
+	indexStatus := string(f.IndexStatus)
+	if f.IndexStatus == 'M' {
+		indexStatus = StagedStyle.Render(indexStatus)
+	} else {
+		indexStatus = UnstagedStyle.Render(indexStatus)
 	}
 
-	return line
+	worktreeStatusAndName := fmt.Sprintf("%s %s", string(f.WorktreeStatus), f.Name)
+	if f.WorktreeStatus == '.' {
+		worktreeStatusAndName = StagedStyle.Render(worktreeStatusAndName)
+	} else {
+		worktreeStatusAndName = UnstagedStyle.Render(worktreeStatusAndName)
+	}
+
+	// Remove the colour reset line terminator
+	indexStatus = strings.TrimSuffix(indexStatus, "\x1b[0m")
+
+	return lipgloss.JoinHorizontal(0, indexStatus, worktreeStatusAndName)
 }
 func (f File) Children() int                           { return 0 }
 func (f File) GetFilePath() string                     { return filepath.Join(f.Dirpath, f.Name) }
@@ -45,7 +55,7 @@ func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)
 	dirpath = filepath.Clean(dirpath)
 
-	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorkTreeStatus: workTreeStatus}
+	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorktreeStatus: workTreeStatus}
 }
 
 func addFile(directory *Directory, dirpath []string, newFile File) {
