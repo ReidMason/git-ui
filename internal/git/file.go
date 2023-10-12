@@ -3,8 +3,8 @@ package git
 import (
 	"fmt"
 	filetree "git-ui/internal/fileTree"
+	"git-ui/internal/styling"
 	"path/filepath"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -40,8 +40,7 @@ func (f File) GetDisplay() string {
 		worktreeStatusAndName = UnstagedStyle.Render(worktreeStatusAndName)
 	}
 
-	// Remove the colour reset line terminator
-	indexStatus = strings.TrimSuffix(indexStatus, "\x1b[0m")
+	indexStatus = styling.TrimColourResetChar(indexStatus)
 
 	return lipgloss.JoinHorizontal(0, indexStatus, worktreeStatusAndName)
 }

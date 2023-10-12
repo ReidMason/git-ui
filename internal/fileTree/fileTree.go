@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"git-ui/internal/styling"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -244,7 +245,7 @@ func (ft FileTree) buildFileTreeString() []string {
 
 func getSelectedStyle(line string, width int) string {
 	selectedStyling := lipgloss.NewStyle().ColorWhitespace(true).Background(lipgloss.Color("8"))
-	line = strings.TrimSuffix(line, "\x1b[0m")
+	line = styling.TrimColourResetChar(line)
 	line = lipgloss.PlaceHorizontal(width-2, lipgloss.Left, line)
 	return selectedStyling.Render(line)
 
