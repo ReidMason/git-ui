@@ -1,6 +1,19 @@
 package git
 
-import filetree "git-ui/internal/fileTree"
+import (
+	"git-ui/internal/colours"
+	filetree "git-ui/internal/fileTree"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+type StagedStatus int
+
+const (
+	Unstaged StagedStatus = iota
+	PartiallyStaged
+	FullyStaged
+)
 
 type Directory struct {
 	Name        string
@@ -34,8 +47,54 @@ func (d Directory) GetFiles() []filetree.FileTreeItem {
 	return items
 }
 
-func (d Directory) GetDisplay() string { return d.Name }
-func (d Directory) IsDirectory() bool  { return true }
+func (d Directory) GetDisplay() string {
+	status := d.getStagedStatus()
+	styling := lipgloss.NewStyle()
+	text := d.Name
+
+	if status == FullyStaged {
+		return styling.Foreground(lipgloss.Color(colours.Green)).Render(text)
+	}
+
+	if status == PartiallyStaged {
+		return styling.Foreground(lipgloss.Color(colours.Peach)).Render(text)
+	}
+
+	return styling.Foreground(lipgloss.Color(colours.Red)).Render(text)
+}
+func (d Directory) getStagedStatus() StagedStatus {
+	for _, subDirectory := range d.Directories {
+		subDirectoryStatus := subDirectory.getStagedStatus()
+		if subDirectoryStatus != FullyStaged {
+			return subDirectoryStatus
+		}
+	}
+
+	if len(d.Files) == 0 {
+		return FullyStaged
+	}
+
+	hasStagedFile := false
+	hasUnstagedFile := false
+	for _, file := range d.Files {
+		if file.IsStaged() {
+			hasStagedFile = true
+		} else {
+			hasUnstagedFile = true
+		}
+
+		if hasStagedFile && hasUnstagedFile {
+			return PartiallyStaged
+		}
+	}
+
+	if hasStagedFile && !hasUnstagedFile {
+		return FullyStaged
+	}
+
+	return Unstaged
+}
+func (d Directory) IsDirectory() bool { return true }
 
 func (d Directory) GetFilePath() string {
 	if len(d.Files) > 0 {

@@ -48,6 +48,7 @@ func (f File) GetFilePath() string                     { return filepath.Join(f.
 func (f File) GetDirectories() []filetree.FileTreeItem { return []filetree.FileTreeItem{} }
 func (f File) GetFiles() []filetree.FileTreeItem       { return []filetree.FileTreeItem{} }
 func (f File) IsDirectory() bool                       { return false }
+func (f File) IsStaged() bool                          { return f.WorktreeStatus == '.' }
 
 func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	dirpath, filename := filepath.Split(filePath)
