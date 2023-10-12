@@ -132,6 +132,9 @@ func (ft *FileTree) handleKeyUp() {
 }
 
 func (ft *FileTree) setCursorIndex(cursorIndex int) {
+	if len(ft.fileTreeItems) == 0 {
+		return
+	}
 	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
 	ft.cursorIndex = cursorIndex
 	ft.fileTreeItems[cursorIndex].setSelected(true)
