@@ -20,11 +20,5 @@ func (s *State) SetGitStatus(gitStatus git.GitStatus) { s.gitStatus = gitStatus 
 func (s State) GetMessage() string         { return s.message }
 func (s *State) SetMessage(message string) { s.message = message }
 
-func (s State) GetViewWidth() int { return s.viewWidth }
-func (s *State) SetViewWidth(viewWidth int) {
-	// for viewWidth%3 != 0 {
-	// 	viewWidth--
-	// }
-
-	s.viewWidth = viewWidth
-}
+func (s State) GetViewWidth() int           { return s.viewWidth }
+func (s *State) SetViewWidth(viewWidth int) { s.viewWidth = viewWidth }

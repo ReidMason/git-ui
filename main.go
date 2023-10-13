@@ -8,7 +8,6 @@ import (
 	"git-ui/internal/state"
 	"git-ui/internal/styling"
 	"git-ui/internal/ui"
-	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -90,31 +89,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds []tea.Cmd
 	)
 
-	// availableWidth := m.width
-	// columnWidth := availableWidth / 12
-	// diffWidth := columnWidth * 4
-	//
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// 	rightKey := key.NewBinding(
-		// 		key.WithKeys("right", "l"),
-		// 		key.WithHelp("right/l", "Right"),
-		// 	)
-		//
-		// 	leftKey := key.NewBinding(
-		// 		key.WithKeys("left", "h"),
-		// 		key.WithHelp("left/h", "Left"),
-		// 	)
-		//
-		// 	switch {
-		// 	case key.Matches(msg, rightKey):
-		// 		m.isFocused = true
-		// 		m.fileTree.IsFocused = false
-		// 	case key.Matches(msg, leftKey):
-		// 		m.isFocused = false
-		// 		m.fileTree.IsFocused = true
-		// 	}
-		//
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -123,40 +99,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		m.state.SetViewWidth(msg.Width)
-		// 	m.width = msg.Width
-		// 	availableWidth := m.width
-		// 	columnWidth := availableWidth / 12
-		// 	diffWidth = columnWidth * 5
-		//
-		// 	height := msg.Height - styling.ColumnStyle.GetHeight() - 5
-		//
+
 		if !m.ready {
-			diffWidth := ui.GetDiffWidth(m.state.GetViewWidth())
-			m.lviewport = viewport.New(diffWidth, msg.Height-5)
-			m.rviewport = viewport.New(diffWidth, msg.Height-5)
+			diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
+			m.lviewport = viewport.New(diffWidth, diffHeight)
+			m.rviewport = viewport.New(diffWidth, diffHeight)
 			m.lviewport.SetContent(git.DiffToString(m.diff.Diff1))
 			m.rviewport.SetContent(git.DiffToString(m.diff.Diff2))
 
-			// 		newFiletree, newCmd := m.fileTree.Update(msg)
-			// 		m.updateFiletree(newFiletree, diffWidth)
-			// 		cmds = append(cmds, newCmd)
-			// 		m.ready = true
-			// 		styling.DiffStyle.Width(diffWidth)
-			// 	} else {
-			// 		m.UpdateDiffDisplay(diffWidth)
-			// 		styling.DiffStyle.Width(diffWidth)
-			//
-			// 		m.lviewport.Width = diffWidth
-			// 		m.lviewport.Height = height
-			//
-			// 		m.rviewport.Width = diffWidth
-			// 		m.rviewport.Height = height
-			// 	}
 			m.ready = true
 		} else {
-			diffWidth := ui.GetDiffWidth(m.state.GetViewWidth())
-			log.Println("DiffWidth", diffWidth)
-			diffHeight := msg.Height - 5
+			diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
 			m.lviewport.Width = diffWidth
 			m.lviewport.Height = diffHeight
 
@@ -195,29 +148,6 @@ func formatDiff(viewport viewport.Model, focused bool) string {
 }
 
 func (m Model) View() string {
-	// takenWidth := m.lviewport.Width * 2
-	//
-	// leftDiff := formatDiff(m.lviewport, m.isFocused)
-	// rightDiff := formatDiff(m.rviewport, m.isFocused)
-	//
-	// width := m.width - takenWidth - styling.ColumnStyle.GetHorizontalBorderSize()
-	// fileTreeStyle := lipgloss.NewStyle().MaxWidth(width)
-	// fileTreeString := fileTreeStyle.Render(m.fileTree.Render())
-	//
-	// borderColour := "60"
-	// if m.fileTree.IsFocused {
-	// 	borderColour = "62"
-	// }
-	//
-	// fileTree := styling.ColumnStyle.
-	// 	Copy().
-	// 	BorderForeground(lipgloss.Color(borderColour)).
-	// 	Width(width).
-	// 	Render(fileTreeString)
-	//
-	// mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, leftDiff, rightDiff)
-	//
-
 	width := m.state.GetViewWidth()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
