@@ -8,6 +8,7 @@ import (
 	"git-ui/internal/state"
 	"git-ui/internal/styling"
 	"git-ui/internal/ui"
+	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -25,12 +26,14 @@ import (
 // This is how we will re-draw efficiently
 
 type Model struct {
-	state     state.State
-	git       git.Git
-	lviewport viewport.Model
-	rviewport viewport.Model
-	fileTree  filetree.FileTree
-	ready     bool
+	state            state.State
+	git              git.Git
+	lviewport        viewport.Model
+	rviewport        viewport.Model
+	selectedFilepath string
+	diff             git.Diff
+	fileTree         filetree.FileTree
+	ready            bool
 }
 
 func initModel() Model {
@@ -44,6 +47,9 @@ func initModel() Model {
 	gitStatus := model.git.GetStatus()
 	model.state.SetGitStatus(gitStatus)
 	model.fileTree = filetree.New(gitStatus.Directory)
+
+	model.selectedFilepath = model.fileTree.GetSelectedFilepath()
+	model.diff = model.git.GetDiff(model.selectedFilepath)
 
 	return model
 }
@@ -80,7 +86,7 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		// cmd  tea.Cmd
+		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 
@@ -124,40 +130,45 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		//
 		// 	height := msg.Height - styling.ColumnStyle.GetHeight() - 5
 		//
-		// 	if !m.ready {
-		// 		m.lviewport = viewport.New(diffWidth, height)
-		// 		m.rviewport = viewport.New(diffWidth, height)
-		//
-		// 		newFiletree, newCmd := m.fileTree.Update(msg)
-		// 		m.updateFiletree(newFiletree, diffWidth)
-		// 		cmds = append(cmds, newCmd)
-		// 		m.ready = true
-		// 		styling.DiffStyle.Width(diffWidth)
-		// 	} else {
-		// 		m.UpdateDiffDisplay(diffWidth)
-		// 		styling.DiffStyle.Width(diffWidth)
-		//
-		// 		m.lviewport.Width = diffWidth
-		// 		m.lviewport.Height = height
-		//
-		// 		m.rviewport.Width = diffWidth
-		// 		m.rviewport.Height = height
-		// 	}
-		// }
+		if !m.ready {
+			diffWidth := ui.GetDiffWidth(m.state.GetViewWidth())
+			m.lviewport = viewport.New(diffWidth, msg.Height-5)
+			m.rviewport = viewport.New(diffWidth, msg.Height-5)
+			m.lviewport.SetContent(git.DiffToString(m.diff.Diff1))
+			m.rviewport.SetContent(git.DiffToString(m.diff.Diff2))
 
-		// if m.fileTree.IsFocused {
-		// 	newFiletree, newCmd := m.fileTree.Update(msg)
-		// 	m.updateFiletree(newFiletree, diffWidth)
-		// 	cmds = append(cmds, newCmd)
+			// 		newFiletree, newCmd := m.fileTree.Update(msg)
+			// 		m.updateFiletree(newFiletree, diffWidth)
+			// 		cmds = append(cmds, newCmd)
+			// 		m.ready = true
+			// 		styling.DiffStyle.Width(diffWidth)
+			// 	} else {
+			// 		m.UpdateDiffDisplay(diffWidth)
+			// 		styling.DiffStyle.Width(diffWidth)
+			//
+			// 		m.lviewport.Width = diffWidth
+			// 		m.lviewport.Height = height
+			//
+			// 		m.rviewport.Width = diffWidth
+			// 		m.rviewport.Height = height
+			// 	}
+			m.ready = true
+		} else {
+			diffWidth := ui.GetDiffWidth(m.state.GetViewWidth())
+			log.Println("DiffWidth", diffWidth)
+			diffHeight := msg.Height - 5
+			m.lviewport.Width = diffWidth
+			m.lviewport.Height = diffHeight
+
+			m.rviewport.Width = diffWidth
+			m.rviewport.Height = diffHeight
+		}
 	}
 
-	// if m.isFocused {
-	// 	m.lviewport, cmd = m.lviewport.Update(msg)
-	// 	cmds = append(cmds, cmd)
-	//
-	// 	m.rviewport, cmd = m.rviewport.Update(msg)
-	// 	cmds = append(cmds, cmd)
-	// }
+	m.lviewport, cmd = m.lviewport.Update(msg)
+	cmds = append(cmds, cmd)
+	m.rviewport, cmd = m.rviewport.Update(msg)
+	cmds = append(cmds, cmd)
 
 	m.fileTree.Update(msg)
 
@@ -207,7 +218,11 @@ func (m Model) View() string {
 	// mainBody := lipgloss.JoinHorizontal(lipgloss.Left, fileTree, leftDiff, rightDiff)
 	//
 
-	return ui.RenderMainView(m.state.GetViewWidth(), m.fileTree)
+	width := m.state.GetViewWidth()
+	leftDiff := m.lviewport.View()
+	rightDiff := m.rviewport.View()
+	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
+	return ui.RenderMainView(width, m.fileTree, diffs)
 }
 
 func main() {

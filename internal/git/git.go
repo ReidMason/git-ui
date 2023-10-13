@@ -91,6 +91,15 @@ func newDiff() Diff {
 	}
 }
 
+func DiffToString(difflines []DiffLine) string {
+	content := ""
+	for _, line := range difflines {
+		content += line.Content + "\n"
+	}
+
+	return content
+}
+
 type DiffLine struct {
 	Content string
 	Type    DiffType
