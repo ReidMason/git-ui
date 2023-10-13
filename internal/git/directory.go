@@ -62,6 +62,7 @@ func (d Directory) GetDisplay() string {
 
 	return styling.Foreground(lipgloss.Color(colours.Red)).Render(text)
 }
+
 func (d Directory) getStagedStatus() StagedStatus {
 	for _, subDirectory := range d.Directories {
 		subDirectoryStatus := subDirectory.getStagedStatus()
@@ -94,6 +95,7 @@ func (d Directory) getStagedStatus() StagedStatus {
 
 	return Unstaged
 }
+
 func (d Directory) IsDirectory() bool { return true }
 
 func (d Directory) GetFilePath() string {

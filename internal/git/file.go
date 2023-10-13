@@ -44,6 +44,7 @@ func (f File) GetDisplay() string {
 
 	return lipgloss.JoinHorizontal(0, indexStatus, worktreeStatusAndName)
 }
+
 func (f File) GetFilePath() string                     { return filepath.Join(f.Dirpath, f.Name) }
 func (f File) GetDirectories() []filetree.FileTreeItem { return []filetree.FileTreeItem{} }
 func (f File) GetFiles() []filetree.FileTreeItem       { return []filetree.FileTreeItem{} }
@@ -67,7 +68,6 @@ func addFile(directory *Directory, dirpath []string, newFile File) {
 	for _, subdir := range directory.Directories {
 		if subdir.Name == dirpath[0] {
 			addFile(subdir, dirpath[1:], newFile)
-			// directory.Directories[i] = addFile(subdir, dirpath[1:], newFile)
 			return
 		}
 	}
