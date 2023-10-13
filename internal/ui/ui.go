@@ -3,7 +3,6 @@ package ui
 import (
 	"git-ui/internal/colours"
 	filetree "git-ui/internal/fileTree"
-	"log"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -39,7 +38,8 @@ func getColumnWidth(viewWidth int) int {
 }
 
 func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
-	return getColumnWidth(viewWidth) * 5, viewHeight - 5
+	headerHeight := 5
+	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight
 }
 
 func RenderMainView(viewWidth int, fileTree filetree.FileTree, diffs string) string {
@@ -54,9 +54,6 @@ func RenderMainView(viewWidth int, fileTree filetree.FileTree, diffs string) str
 	diffs = BorderStyle.Render(diffs)
 
 	leftoverWidth := viewWidth - usedWidth
-	log.Println("used width", usedWidth)
-	log.Println("total width", viewWidth)
-	log.Println("Leftover", leftoverWidth)
 	fileTreeString := RenderFileTree(fileTree, leftoverWidth)
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)
