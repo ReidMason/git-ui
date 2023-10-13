@@ -84,9 +84,11 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		cmd  tea.Cmd
+		// cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
+
+	m.fileTree.Update(msg)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -118,12 +120,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	m.lviewport, cmd = m.lviewport.Update(msg)
-	cmds = append(cmds, cmd)
-	m.rviewport, cmd = m.rviewport.Update(msg)
-	cmds = append(cmds, cmd)
+	newSelectedFilepath := m.fileTree.GetSelectedFilepath()
+	if newSelectedFilepath != m.selectedFilepath {
+		m.selectedFilepath = newSelectedFilepath
+		m.diff = m.git.GetDiff(newSelectedFilepath)
+		m.lviewport.SetContent(git.DiffToString(m.diff.Diff1))
+		m.rviewport.SetContent(git.DiffToString(m.diff.Diff2))
+		m.lviewport.GotoTop()
+		m.rviewport.GotoTop()
+	}
 
-	m.fileTree.Update(msg)
+	// m.lviewport, cmd = m.lviewport.Update(msg)
+	// cmds = append(cmds, cmd)
+	// m.rviewport, cmd = m.rviewport.Update(msg)
+	// cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
