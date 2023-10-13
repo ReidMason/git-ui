@@ -13,6 +13,7 @@ type FileTreeElement interface {
 	setSelected(selected bool)
 	toggleExpanded()
 	isVisible() bool
+	getFilePath() string
 }
 
 type Directory struct {
@@ -29,6 +30,7 @@ func newDirectory(parent *Directory, item FileTreeItem) Directory {
 }
 
 func (d *Directory) setSelected(selected bool) { d.selected = selected }
+func (d Directory) getFilePath() string        { return d.item.GetFilePath() }
 func (d *Directory) toggleExpanded()           { d.expanded = !d.expanded }
 func (d Directory) isVisible() bool {
 	if d.parent == nil {
@@ -45,6 +47,7 @@ type File struct {
 }
 
 func (f *File) setSelected(selected bool) { f.selected = selected }
+func (f File) getFilePath() string        { return f.item.GetFilePath() }
 func (f *File) toggleExpanded()           {}
 func (f File) isVisible() bool            { return f.parent.isVisible() && f.parent.expanded }
 
@@ -226,6 +229,11 @@ func buildFileTreeElementOutputString(directory Directory, output []string, dept
 	}
 
 	return output
+}
+
+func (ft FileTree) GetSelectedFilepath() string {
+	selectedItem := ft.fileTreeItems[ft.cursorIndex]
+	return selectedItem.getFilePath()
 }
 
 func (ft FileTree) buildFileTreeString() []string {
