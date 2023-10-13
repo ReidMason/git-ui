@@ -45,7 +45,8 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 func RenderMainView(viewWidth int, fileTree filetree.FileTree, diffs string) string {
 	header := RenderHeader("Git-UI", viewWidth)
 
-	diffWidth := GetDiffDimensions(viewWidth) * 2
+	diffWidth, _ := GetDiffDimensions(viewWidth, 0)
+	diffWidth *= 2
 	usedWidth := diffWidth
 
 	diffWidth -= BorderStyle.GetHorizontalBorderSize()

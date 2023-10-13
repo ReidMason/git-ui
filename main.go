@@ -6,7 +6,6 @@ import (
 	"git-ui/internal/git"
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/state"
-	"git-ui/internal/styling"
 	"git-ui/internal/ui"
 	"os"
 
@@ -97,6 +96,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		default:
 			// m.state.SetMessage(msg.String())
 		}
+
 	case tea.WindowSizeMsg:
 		m.state.SetViewWidth(msg.Width)
 
@@ -126,25 +126,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.fileTree.Update(msg)
 
 	return m, tea.Batch(cmds...)
-}
-
-func formatDiff(viewport viewport.Model, focused bool) string {
-	diffString := viewport.View()
-	thing := lipgloss.
-		NewStyle().
-		MaxWidth(viewport.Width - styling.ColumnStyle.GetHorizontalBorderSize()).
-		Render(diffString)
-
-	borderColour := "60"
-	if focused {
-		borderColour = "62"
-	}
-
-	return styling.ColumnStyle.
-		Copy().
-		BorderForeground(lipgloss.Color(borderColour)).
-		Width(viewport.Width - styling.ColumnStyle.GetHorizontalBorderSize()).
-		Render(thing)
 }
 
 func (m Model) View() string {
