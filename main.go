@@ -47,7 +47,9 @@ func initModel() Model {
 	model.fileTree = filetree.New(gitStatus.Directory)
 
 	model.selectedFilepath = model.fileTree.GetSelectedFilepath()
-	model.diff = model.git.GetDiff(model.selectedFilepath)
+	if model.selectedFilepath != "" {
+		model.diff = model.git.GetDiff(model.selectedFilepath)
+	}
 
 	return model
 }

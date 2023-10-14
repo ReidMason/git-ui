@@ -232,6 +232,10 @@ func buildFileTreeElementOutputString(directory Directory, output []string, dept
 }
 
 func (ft FileTree) GetSelectedFilepath() string {
+	if len(ft.fileTreeItems) == 0 {
+		return ""
+	}
+
 	selectedItem := ft.fileTreeItems[ft.cursorIndex]
 	return selectedItem.getFilePath()
 }

@@ -51,6 +51,7 @@ func RenderMainView(viewWidth int, fileTree filetree.FileTree, diffs string) str
 
 	diffWidth -= BorderStyle.GetHorizontalBorderSize()
 	diffs = lipgloss.NewStyle().MaxWidth(diffWidth).Render(diffs)
+	diffs = lipgloss.NewStyle().Width(diffWidth).Render(diffs)
 	diffs = BorderStyle.Render(diffs)
 
 	leftoverWidth := viewWidth - usedWidth
