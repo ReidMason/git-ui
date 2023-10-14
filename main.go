@@ -7,6 +7,7 @@ import (
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/state"
 	"git-ui/internal/ui"
+	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -34,6 +35,17 @@ type Model struct {
 	ready            bool
 }
 
+func action(selectedItem filetree.FileTreeItem) {
+	switch item := selectedItem.(type) {
+	case git.File:
+		log.Println("File action: ", item.Name)
+	case *git.Directory:
+		log.Println("Directory action: ", item.Name)
+	default:
+		log.Println("Got something else", item)
+	}
+}
+
 func initModel() Model {
 	gitCommands := gitcommands.New()
 
@@ -44,7 +56,7 @@ func initModel() Model {
 
 	gitStatus := model.git.GetStatus()
 	model.state.SetGitStatus(gitStatus)
-	model.fileTree = filetree.New(gitStatus.Directory)
+	model.fileTree = filetree.New(gitStatus.Directory, action)
 
 	model.selectedFilepath = model.fileTree.GetSelectedFilepath()
 	if model.selectedFilepath != "" {
@@ -74,6 +86,7 @@ func (m Model) Init() tea.Cmd {
 // 			diff := git.ParseDiff(diffString)
 // 			m.lviewport.SetContent(styling.StyleDiff(diff.Diff1, lineWidth))
 // 			m.rviewport.SetContent(styling.StyleDiff(diff.Diff2, lineWidth))
+
 // 			m.lviewport.GotoTop()
 // 			m.rviewport.GotoTop()
 // 			m.UpdateDiffDisplay(lineWidth)

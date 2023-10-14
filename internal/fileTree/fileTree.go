@@ -14,6 +14,7 @@ type FileTreeElement interface {
 	toggleExpanded()
 	isVisible() bool
 	getFilePath() string
+	getItem() FileTreeItem
 }
 
 type Directory struct {
@@ -32,6 +33,7 @@ func newDirectory(parent *Directory, item FileTreeItem) Directory {
 func (d *Directory) setSelected(selected bool) { d.selected = selected }
 func (d Directory) getFilePath() string        { return d.item.GetFilePath() }
 func (d *Directory) toggleExpanded()           { d.expanded = !d.expanded }
+func (d Directory) getItem() FileTreeItem      { return d.item }
 func (d Directory) isVisible() bool {
 	if d.parent == nil {
 		return true
@@ -48,6 +50,7 @@ type File struct {
 
 func (f *File) setSelected(selected bool) { f.selected = selected }
 func (f File) getFilePath() string        { return f.item.GetFilePath() }
+func (f File) getItem() FileTreeItem      { return f.item }
 func (f *File) toggleExpanded()           {}
 func (f File) isVisible() bool            { return f.parent.isVisible() && f.parent.expanded }
 
@@ -71,11 +74,13 @@ type FileTree struct {
 	cursorIndex   int
 	isFocused     bool
 	width         int
+	action        func(selectedItem FileTreeItem)
 }
 
-func New(directory FileTreeItem) FileTree {
+func New(directory FileTreeItem, action func(selectedItem FileTreeItem)) FileTree {
 	fileTree := FileTree{
 		isFocused: true,
+		action:    action,
 	}
 
 	fileTree.buildTree(directory)
@@ -100,6 +105,11 @@ func (ft *FileTree) Update(msg tea.Msg) {
 		key.WithHelp("enter", "Enter"),
 	)
 
+	keySpace := key.NewBinding(
+		key.WithKeys(" "),
+		key.WithHelp("space", "Space"),
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -109,6 +119,9 @@ func (ft *FileTree) Update(msg tea.Msg) {
 			ft.handleKeyUp()
 		case key.Matches(msg, keyEnter):
 			ft.handleKeyEnter()
+		case key.Matches(msg, keySpace):
+			selectedItem := ft.fileTreeItems[ft.cursorIndex]
+			ft.action(selectedItem.getItem())
 		}
 	case tea.WindowSizeMsg:
 		ft.width = msg.Width
