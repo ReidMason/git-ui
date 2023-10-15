@@ -2,7 +2,6 @@ package filetree
 
 import (
 	"git-ui/internal/styling"
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -194,7 +193,6 @@ func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string) i
 		ft.root.files = append(ft.root.files, &newFile)
 	}
 
-	log.Println(selectedIndex)
 	return selectedIndex
 }
 

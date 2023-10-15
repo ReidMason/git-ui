@@ -130,7 +130,7 @@ func (m Model) View() string {
 }
 
 func main() {
-	debug := true
+	debug := false
 	if debug {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
