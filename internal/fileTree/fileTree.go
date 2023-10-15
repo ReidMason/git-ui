@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"git-ui/internal/styling"
+	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -156,10 +157,16 @@ func (ft *FileTree) setCursorIndex(cursorIndex int) {
 	if len(ft.fileTreeItems) == 0 {
 		return
 	}
-	ft.fileTreeItems[ft.cursorIndex].setSelected(false)
+
+	for _, item := range ft.fileTreeItems {
+		item.setSelected(false)
+	}
+	// ft.fileTreeItems[ft.cursorIndex].setSelected(false)
 
 	ft.cursorIndex = cursorIndex
 	ft.fileTreeItems[cursorIndex].setSelected(true)
+	selectedItem := ft.fileTreeItems[cursorIndex]
+	log.Println(selectedItem.getFilePath(), cursorIndex)
 }
 
 func (ft *FileTree) handleKeyEnter() {
@@ -178,6 +185,7 @@ func (ft FileTree) Render() string {
 func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string) int {
 	selectedIndex := 0
 	ft.root = newDirectory(nil, directory)
+	ft.fileTreeItems = nil
 
 	for _, subDirectory := range directory.GetDirectories() {
 		res := ft.buildTreeR(&ft.root, subDirectory, selectedFilepath)

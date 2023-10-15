@@ -25,6 +25,7 @@ import (
 // This is how we will re-draw efficiently
 
 // BUG: If you have a file selected and the filetree refreshes and that item vanishes the selection gets broken
+// Write a test for this
 
 type Model struct {
 	state            state.State
@@ -113,6 +114,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.state.SetGitStatus(newStatus)
 				m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.selectedFilepath)
 			}
+		case "esc":
+			m.committing = false
+			m.fileTree.SetFocused(true)
+
+			newStatus := m.git.GetStatus()
+			m.state.SetGitStatus(newStatus)
+			m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.selectedFilepath)
 		case "c":
 			if !m.committing {
 				m.committing = true
