@@ -81,8 +81,7 @@ func New(directory FileTreeItem) FileTree {
 	fileTree := FileTree{
 		isFocused: true,
 	}
-	cursorIndex := fileTree.buildTree(directory, "")
-	fileTree.setCursorIndex(cursorIndex)
+	fileTree.UpdateDirectoryTree(directory, "")
 
 	return fileTree
 }
