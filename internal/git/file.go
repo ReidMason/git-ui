@@ -5,7 +5,6 @@ import (
 	filetree "git-ui/internal/fileTree"
 	"git-ui/internal/styling"
 	"path/filepath"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -59,7 +58,7 @@ func newFile(filePath string, indexStatus, workTreeStatus rune) File {
 	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorktreeStatus: workTreeStatus}
 }
 
-func addFile(directory *Directory, dirpath []string, newFile File) {
+func addFile(directory *Directory, dirpath []string, fullDirpath string, newFile File) {
 	if len(dirpath) == 0 || dirpath[0] == "." {
 		newFile.Parent = directory
 		directory.Files = append(directory.Files, newFile)
@@ -68,13 +67,13 @@ func addFile(directory *Directory, dirpath []string, newFile File) {
 
 	for _, subdir := range directory.Directories {
 		if subdir.Name == dirpath[0] {
-			addFile(subdir, dirpath[1:], newFile)
+			addFile(subdir, dirpath[1:], fullDirpath, newFile)
 			return
 		}
 	}
 
-	newDir := newDirectory(dirpath[0], strings.Join(dirpath, "/"), directory)
-	addFile(newDir, dirpath[1:], newFile)
+	newDir := newDirectory(dirpath[0], fullDirpath, directory)
+	addFile(newDir, dirpath[1:], fullDirpath, newFile)
 	newDir.Parent = directory
 	directory.Directories = append(directory.Directories, newDir)
 }

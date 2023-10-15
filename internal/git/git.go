@@ -48,7 +48,7 @@ func (g Git) GetStatus() GitStatus {
 
 		if changeType == changed {
 			file := parseChangedStatusLine(lineString)
-			addFile(directory, strings.Split(file.Dirpath, "/"), file)
+			addFile(directory, strings.Split(file.Dirpath, "/"), file.Dirpath, file)
 		}
 		//   else if changeType == copied {
 		//
@@ -70,9 +70,8 @@ func parseChangedStatusLine(line string) File {
 	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
 }
 
-func (g Git) Stage(filepath string) {
-	g.commandRunner.Stage(filepath)
-}
+func (g Git) Stage(filepath string)   { g.commandRunner.Stage(filepath) }
+func (g Git) Unstage(filepath string) { g.commandRunner.Unstage(filepath) }
 
 type DiffType int8
 

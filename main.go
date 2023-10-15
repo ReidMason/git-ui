@@ -67,7 +67,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	selectedItem := m.fileTree.Update(msg)
 	if selectedItem != nil {
 		filepath := selectedItem.GetFilePath()
-		m.git.Stage(filepath)
+
+		stage := true
+		switch item := selectedItem.(type) {
+		case *git.Directory:
+			stage = item.GetStagedStatus() != git.FullyStaged
+		case git.File:
+			stage = !item.IsStaged()
+		}
+
+		if stage {
+			m.git.Stage(filepath)
+		} else {
+			m.git.Unstage(filepath)
+		}
+
 		newStatus := m.git.GetStatus()
 		m.state.SetGitStatus(newStatus)
 		m.fileTree.UpdateDirectoryTree(newStatus.Directory, filepath)
@@ -130,7 +144,7 @@ func (m Model) View() string {
 }
 
 func main() {
-	debug := false
+	debug := true
 	if debug {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {

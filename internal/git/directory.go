@@ -50,7 +50,7 @@ func (d Directory) GetFiles() []filetree.FileTreeItem {
 }
 
 func (d Directory) GetDisplay() string {
-	status := d.getStagedStatus()
+	status := d.GetStagedStatus()
 	styling := lipgloss.NewStyle()
 	text := d.Name
 
@@ -65,9 +65,9 @@ func (d Directory) GetDisplay() string {
 	return styling.Foreground(lipgloss.Color(colours.Red)).Render(text)
 }
 
-func (d Directory) getStagedStatus() StagedStatus {
+func (d Directory) GetStagedStatus() StagedStatus {
 	for _, subDirectory := range d.Directories {
-		subDirectoryStatus := subDirectory.getStagedStatus()
+		subDirectoryStatus := subDirectory.GetStagedStatus()
 		if subDirectoryStatus != FullyStaged {
 			return subDirectoryStatus
 		}
