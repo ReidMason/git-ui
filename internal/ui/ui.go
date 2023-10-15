@@ -30,6 +30,7 @@ func RenderFileTree(filetree filetree.FileTree, width int) string {
 	fileTreeString := lipgloss.NewStyle().
 		MaxWidth(width).
 		Render(filetree.Render())
+	fileTreeString = lipgloss.NewStyle().Width(width).Render(fileTreeString)
 	return BorderStyle.Render(fileTreeString)
 }
 
