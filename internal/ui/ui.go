@@ -25,12 +25,12 @@ func RenderHeader(header string, viewWidth int) string {
 	return headerStyling.Render(header)
 }
 
-func RenderFileTree(filetree filetree.FileTree, width int) string {
+func RenderFileTree(filetree filetree.FileTree, width, height int) string {
 	width = width - BorderStyle.GetHorizontalBorderSize()
 	fileTreeString := lipgloss.NewStyle().
 		MaxWidth(width).
 		Render(filetree.Render())
-	fileTreeString = lipgloss.NewStyle().Width(width).Render(fileTreeString)
+	fileTreeString = lipgloss.NewStyle().Width(width).Height(height).Render(fileTreeString)
 	return BorderStyle.Render(fileTreeString)
 }
 
@@ -43,10 +43,10 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight
 }
 
-func RenderMainView(viewWidth int, fileTree filetree.FileTree, diffs string) string {
+func RenderMainView(viewWidth, viewHeight int, fileTree filetree.FileTree, diffs string) string {
 	header := RenderHeader("Git-UI", viewWidth)
 
-	diffWidth, _ := GetDiffDimensions(viewWidth, 0)
+	diffWidth, diffHeight := GetDiffDimensions(viewWidth, viewHeight)
 	diffWidth *= 2
 	usedWidth := diffWidth
 
@@ -57,7 +57,7 @@ func RenderMainView(viewWidth int, fileTree filetree.FileTree, diffs string) str
 	diffs = BorderStyle.Render(diffs)
 
 	leftoverWidth := viewWidth - usedWidth
-	fileTreeString := RenderFileTree(fileTree, leftoverWidth)
+	fileTreeString := RenderFileTree(fileTree, leftoverWidth, diffHeight)
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)
 

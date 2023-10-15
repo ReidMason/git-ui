@@ -138,6 +138,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.WindowSizeMsg:
 		m.state.SetViewWidth(msg.Width)
+		m.state.SetViewHeight(msg.Height)
 
 		if !m.ready {
 			diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
@@ -181,10 +182,11 @@ func (m Model) View() string {
 	}
 
 	width := m.state.GetViewWidth()
+	height := m.state.GetViewHeight()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
-	return ui.RenderMainView(width, m.fileTree, diffs)
+	return ui.RenderMainView(width, height, m.fileTree, diffs)
 }
 
 func main() {
