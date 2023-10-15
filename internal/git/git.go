@@ -48,7 +48,7 @@ func (g Git) GetStatus() GitStatus {
 
 		if changeType == changed {
 			file := parseChangedStatusLine(lineString)
-			addFile(directory, strings.Split(file.Dirpath, "/"), file.Dirpath, file)
+			addFile(directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
 		}
 		//   else if changeType == copied {
 		//
