@@ -7,7 +7,6 @@ import (
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/state"
 	"git-ui/internal/ui"
-	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/viewport"
@@ -35,17 +34,6 @@ type Model struct {
 	ready            bool
 }
 
-func action(selectedItem filetree.FileTreeItem) {
-	switch item := selectedItem.(type) {
-	case git.File:
-		log.Println("File action: ", item.Name)
-	case *git.Directory:
-		log.Println("Directory action: ", item.Name)
-	default:
-		log.Println("Got something else", item)
-	}
-}
-
 func initModel() Model {
 	gitCommands := gitcommands.New()
 
@@ -56,7 +44,7 @@ func initModel() Model {
 
 	gitStatus := model.git.GetStatus()
 	model.state.SetGitStatus(gitStatus)
-	model.fileTree = filetree.New(gitStatus.Directory, action)
+	model.fileTree = filetree.New(gitStatus.Directory, "")
 
 	model.selectedFilepath = model.fileTree.GetSelectedFilepath()
 	if model.selectedFilepath != "" {
@@ -70,40 +58,20 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-// func (m Model) UpdateDiffDisplay(lineWidth int) {
-// 	ldiff := styling.StyleDiff(m.diff.Diff1, lineWidth)
-// 	m.lviewport.SetContent(ldiff)
-//
-// 	rdiff := styling.StyleDiff(m.diff.Diff2, lineWidth)
-// 	m.rviewport.SetContent(rdiff)
-// }
-
-// func (m *Model) updateFiletree(newFiletree filetree.FileTree, lineWidth int) {
-// 	if !m.ready || m.fileTree.GetIndex() != newFiletree.GetIndex() {
-// 		filepath := newFiletree.GetSelectedFilepath()
-// 		if filepath != "" {
-// 			diffString := git.GetRawDiff(filepath)
-// 			diff := git.ParseDiff(diffString)
-// 			m.lviewport.SetContent(styling.StyleDiff(diff.Diff1, lineWidth))
-// 			m.rviewport.SetContent(styling.StyleDiff(diff.Diff2, lineWidth))
-
-// 			m.lviewport.GotoTop()
-// 			m.rviewport.GotoTop()
-// 			m.UpdateDiffDisplay(lineWidth)
-// 		}
-// 	}
-//
-// 	m.fileTree = newFiletree
-// 	m.UpdateDiffDisplay(lineWidth)
-// }
-
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		// cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 
-	m.fileTree.Update(msg)
+	selectedItem := m.fileTree.Update(msg)
+	if selectedItem != nil {
+		filepath := selectedItem.GetFilePath()
+		m.git.Stage(filepath)
+		newStatus := m.git.GetStatus()
+		m.state.SetGitStatus(newStatus)
+		m.fileTree = filetree.New(newStatus.Directory, filepath)
+	}
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:

@@ -2,6 +2,7 @@ package filetree
 
 import (
 	"git-ui/internal/styling"
+	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -74,22 +75,19 @@ type FileTree struct {
 	cursorIndex   int
 	isFocused     bool
 	width         int
-	action        func(selectedItem FileTreeItem)
 }
 
-func New(directory FileTreeItem, action func(selectedItem FileTreeItem)) FileTree {
+func New(directory FileTreeItem, selectedFilepath string) FileTree {
 	fileTree := FileTree{
 		isFocused: true,
-		action:    action,
 	}
-
-	fileTree.buildTree(directory)
-	fileTree.setCursorIndex(0)
+	cursorIndex := fileTree.buildTree(directory, selectedFilepath)
+	fileTree.setCursorIndex(cursorIndex)
 
 	return fileTree
 }
 
-func (ft *FileTree) Update(msg tea.Msg) {
+func (ft *FileTree) Update(msg tea.Msg) FileTreeItem {
 	keyDown := key.NewBinding(
 		key.WithKeys("down", "j"),
 		key.WithHelp("down/j", "Down"),
@@ -120,12 +118,13 @@ func (ft *FileTree) Update(msg tea.Msg) {
 		case key.Matches(msg, keyEnter):
 			ft.handleKeyEnter()
 		case key.Matches(msg, keySpace):
-			selectedItem := ft.fileTreeItems[ft.cursorIndex]
-			ft.action(selectedItem.getItem())
+			return ft.fileTreeItems[ft.cursorIndex].getItem()
 		}
 	case tea.WindowSizeMsg:
 		ft.width = msg.Width
 	}
+
+	return nil
 }
 
 func (ft *FileTree) handleKeyDown() {
@@ -169,35 +168,61 @@ func (ft FileTree) Render() string {
 	return strings.Join(ft.buildFileTreeString(), "\n")
 }
 
-func (ft *FileTree) buildTree(directory FileTreeItem) {
+func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string) int {
+	selectedIndex := 0
 	ft.root = newDirectory(nil, directory)
 
 	for _, subDirectory := range directory.GetDirectories() {
-		ft.buildTreeR(&ft.root, subDirectory)
+		res := ft.buildTreeR(&ft.root, subDirectory, selectedFilepath)
+		if res > 0 {
+			selectedIndex = res
+		}
 	}
 
 	for _, file := range directory.GetFiles() {
+		if file.GetFilePath() == selectedFilepath {
+			selectedIndex = len(ft.fileTreeItems)
+		}
+
 		newFile := File{parent: &ft.root, item: file}
 		ft.fileTreeItems = append(ft.fileTreeItems, &newFile)
 		ft.root.files = append(ft.root.files, &newFile)
 	}
+
+	log.Println(selectedIndex)
+	return selectedIndex
 }
 
-func (ft *FileTree) buildTreeR(parent *Directory, directory FileTreeItem) {
+func (ft *FileTree) buildTreeR(parent *Directory, directory FileTreeItem, selectedFilepath string) int {
+	selectedIndex := 0
+	if directory.GetFilePath() == selectedFilepath {
+		selectedIndex = len(ft.fileTreeItems)
+	}
+
 	newDirectory := newDirectory(parent, directory)
 	ft.fileTreeItems = append(ft.fileTreeItems, &newDirectory)
 
 	for _, subDirectory := range directory.GetDirectories() {
-		ft.buildTreeR(&newDirectory, subDirectory)
+		res := ft.buildTreeR(&newDirectory, subDirectory, selectedFilepath)
+
+		if res > 0 {
+			selectedIndex = res
+		}
 	}
 
 	for _, file := range directory.GetFiles() {
+		if file.GetFilePath() == selectedFilepath {
+			selectedIndex = len(ft.fileTreeItems)
+		}
+
 		newFile := File{parent: &newDirectory, item: file}
 		ft.fileTreeItems = append(ft.fileTreeItems, &newFile)
 		newDirectory.files = append(newDirectory.files, &newFile)
 	}
 
 	parent.directories = append(parent.directories, &newDirectory)
+
+	return selectedIndex
 }
 
 func getIcon(directory Directory) string {
