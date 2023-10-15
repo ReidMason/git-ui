@@ -132,11 +132,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				ti.Width = m.state.GetViewWidth()
 				m.textInput = ti
 			}
-
-			// filepath := selectedItem.GetFilePath()
-			// newStatus := m.git.GetStatus()
-			// m.state.SetGitStatus(newStatus)
-			// m.fileTree.UpdateDirectoryTree(newStatus.Directory, filepath)
 		default:
 			// m.state.SetMessage(msg.String())
 		}

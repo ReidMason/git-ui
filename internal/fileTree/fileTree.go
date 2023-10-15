@@ -161,7 +161,6 @@ func (ft *FileTree) setCursorIndex(cursorIndex int) {
 	for _, item := range ft.fileTreeItems {
 		item.setSelected(false)
 	}
-	// ft.fileTreeItems[ft.cursorIndex].setSelected(false)
 
 	ft.cursorIndex = cursorIndex
 	ft.fileTreeItems[cursorIndex].setSelected(true)
