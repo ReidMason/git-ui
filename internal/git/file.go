@@ -5,6 +5,7 @@ import (
 	filetree "git-ui/internal/fileTree"
 	"git-ui/internal/styling"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -72,7 +73,7 @@ func addFile(directory *Directory, dirpath []string, newFile File) {
 		}
 	}
 
-	newDir := newDirectory(dirpath[0], directory)
+	newDir := newDirectory(dirpath[0], strings.Join(dirpath, "/"), directory)
 	addFile(newDir, dirpath[1:], newFile)
 	newDir.Parent = directory
 	directory.Directories = append(directory.Directories, newDir)

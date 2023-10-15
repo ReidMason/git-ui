@@ -182,6 +182,7 @@ func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string) i
 	for _, file := range directory.GetFiles() {
 		if file.GetFilePath() == selectedFilepath {
 			selectedIndex = len(ft.fileTreeItems)
+
 		}
 
 		newFile := File{parent: &ft.root, item: file}

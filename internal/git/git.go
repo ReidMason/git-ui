@@ -39,7 +39,7 @@ func (g Git) GetStatus() GitStatus {
 	// First four lines are branch data so skip them for now
 	lines = lines[4:]
 
-	directory := newDirectory("Root", nil)
+	directory := newDirectory("Root", ".", nil)
 
 	for _, line := range lines {
 		firstRune, lineString := utils.TrimFirstRune(line)

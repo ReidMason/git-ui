@@ -17,14 +17,16 @@ const (
 
 type Directory struct {
 	Name        string
+	Filepath    string
 	Parent      *Directory
 	Files       []File
 	Directories []*Directory
 }
 
-func newDirectory(name string, parent *Directory) *Directory {
+func newDirectory(name, filepath string, parent *Directory) *Directory {
 	return &Directory{
 		Name:        name,
+		Filepath:    filepath,
 		Files:       make([]File, 0),
 		Directories: make([]*Directory, 0),
 		Parent:      parent,
@@ -98,14 +100,4 @@ func (d Directory) getStagedStatus() StagedStatus {
 
 func (d Directory) IsDirectory() bool { return true }
 
-func (d Directory) GetFilePath() string {
-	if len(d.Files) > 0 {
-		return d.Files[0].GetFilePath()
-	}
-
-	if len(d.Directories) > 0 {
-		return d.Directories[0].GetFilePath()
-	}
-
-	return ""
-}
+func (d Directory) GetFilePath() string { return d.Filepath }
