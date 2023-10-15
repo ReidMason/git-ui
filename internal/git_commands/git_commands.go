@@ -53,7 +53,7 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 	result, err := utils.RunCommand("git", args...)
 
 	if err != nil {
-		log.Fatal("Failed to get git diff", err)
+		return ""
 	}
 
 	return result
