@@ -129,7 +129,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				ti.Placeholder = "Commit message"
 				ti.Focus()
 				ti.CharLimit = 156
-				ti.Width = 20
+				ti.Width = m.state.GetViewWidth()
 				m.textInput = ti
 			}
 
