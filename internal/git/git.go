@@ -70,6 +70,10 @@ func parseChangedStatusLine(line string) File {
 	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
 }
 
+func (g Git) Stage(filepath string) {
+	g.commandRunner.Stage(filepath)
+}
+
 type DiffType int8
 
 const (
@@ -111,9 +115,12 @@ func newDiffLine(content string, diffType DiffType) DiffLine {
 
 func (g Git) GetDiff(filepath string) Diff {
 	diffString := g.commandRunner.GetDiff(filepath)
-	lines := strings.Split(diffString, "\n")[5:]
-
 	diff := newDiff()
+	if len(diffString) == 0 {
+		return diff
+	}
+
+	lines := strings.Split(diffString, "\n")[5:]
 
 	changes := 0
 	blankDiffLine := newDiffLine("", Blank)
