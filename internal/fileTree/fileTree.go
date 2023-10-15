@@ -77,9 +77,10 @@ type FileTree struct {
 	width         int
 }
 
-func New(directory FileTreeItem, selectedFilepath string) FileTree {
+func New(directory FileTreeItem, selectedFilepath string, defaultWidth int) FileTree {
 	fileTree := FileTree{
 		isFocused: true,
+		width:     defaultWidth,
 	}
 	cursorIndex := fileTree.buildTree(directory, selectedFilepath)
 	fileTree.setCursorIndex(cursorIndex)
