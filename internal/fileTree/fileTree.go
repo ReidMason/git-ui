@@ -77,15 +77,19 @@ type FileTree struct {
 	width         int
 }
 
-func New(directory FileTreeItem, selectedFilepath string, defaultWidth int) FileTree {
+func New(directory FileTreeItem) FileTree {
 	fileTree := FileTree{
 		isFocused: true,
-		width:     defaultWidth,
 	}
-	cursorIndex := fileTree.buildTree(directory, selectedFilepath)
+	cursorIndex := fileTree.buildTree(directory, "")
 	fileTree.setCursorIndex(cursorIndex)
 
 	return fileTree
+}
+
+func (ft *FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath string) {
+	cursorIndex := ft.buildTree(directory, selectedFilepath)
+	ft.setCursorIndex(cursorIndex)
 }
 
 func (ft *FileTree) Update(msg tea.Msg) FileTreeItem {

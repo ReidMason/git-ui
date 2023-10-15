@@ -44,7 +44,7 @@ func initModel() Model {
 
 	gitStatus := model.git.GetStatus()
 	model.state.SetGitStatus(gitStatus)
-	model.fileTree = filetree.New(gitStatus.Directory, "", 0)
+	model.fileTree = filetree.New(gitStatus.Directory)
 
 	model.selectedFilepath = model.fileTree.GetSelectedFilepath()
 	if model.selectedFilepath != "" {
@@ -70,7 +70,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.git.Stage(filepath)
 		newStatus := m.git.GetStatus()
 		m.state.SetGitStatus(newStatus)
-		m.fileTree = filetree.New(newStatus.Directory, filepath, m.state.GetViewWidth())
+		m.fileTree.UpdateDirectoryTree(newStatus.Directory, filepath)
 	}
 
 	switch msg := msg.(type) {
