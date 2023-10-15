@@ -91,6 +91,10 @@ func (ft *FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath
 }
 
 func (ft *FileTree) Update(msg tea.Msg) FileTreeItem {
+	if !ft.isFocused {
+		return nil
+	}
+
 	keyDown := key.NewBinding(
 		key.WithKeys("down", "j"),
 		key.WithHelp("down/j", "Down"),
@@ -297,6 +301,10 @@ func (ft FileTree) buildFileTreeString() []string {
 	}
 
 	return output
+}
+
+func (ft *FileTree) SetFocused(focused bool) {
+	ft.isFocused = focused
 }
 
 func getSelectedStyle(line string, width int) string {

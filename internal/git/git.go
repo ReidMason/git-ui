@@ -70,8 +70,9 @@ func parseChangedStatusLine(line string) File {
 	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
 }
 
-func (g Git) Stage(filepath string)   { g.commandRunner.Stage(filepath) }
-func (g Git) Unstage(filepath string) { g.commandRunner.Unstage(filepath) }
+func (g Git) Stage(filepath string)       { g.commandRunner.Stage(filepath) }
+func (g Git) Unstage(filepath string)     { g.commandRunner.Unstage(filepath) }
+func (g Git) Commit(commitMessage string) { g.commandRunner.Commit(commitMessage) }
 
 type DiffType int8
 

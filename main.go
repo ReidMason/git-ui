@@ -9,6 +9,7 @@ import (
 	"git-ui/internal/ui"
 	"os"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -23,6 +24,8 @@ import (
 // Components or other "listeners" can subscribe to updates on the state which they can then act on
 // This is how we will re-draw efficiently
 
+// BUG: If you have a file selected and the filetree refreshes and that item vanishes the selection gets broken
+
 type Model struct {
 	state            state.State
 	git              git.Git
@@ -31,6 +34,8 @@ type Model struct {
 	selectedFilepath string
 	diff             git.Diff
 	fileTree         filetree.FileTree
+	committing       bool
+	textInput        textinput.Model
 	ready            bool
 }
 
@@ -38,8 +43,9 @@ func initModel() Model {
 	gitCommands := gitcommands.New()
 
 	model := Model{
-		git:   git.New(gitCommands),
-		state: state.New(),
+		git:        git.New(gitCommands),
+		state:      state.New(),
+		committing: false,
 	}
 
 	gitStatus := model.git.GetStatus()
@@ -87,11 +93,42 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.fileTree.UpdateDirectoryTree(newStatus.Directory, filepath)
 	}
 
+	if m.committing {
+		m.textInput, _ = m.textInput.Update(msg)
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "enter":
+			if m.committing {
+				m.committing = false
+				m.fileTree.SetFocused(true)
+				commitMessage := m.textInput.Value()
+				m.git.Commit(commitMessage)
+
+				newStatus := m.git.GetStatus()
+				m.state.SetGitStatus(newStatus)
+				m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.selectedFilepath)
+			}
+		case "c":
+			if !m.committing {
+				m.committing = true
+				m.fileTree.SetFocused(false)
+				ti := textinput.New()
+				ti.Placeholder = "Commit message"
+				ti.Focus()
+				ti.CharLimit = 156
+				ti.Width = 20
+				m.textInput = ti
+			}
+
+			// filepath := selectedItem.GetFilePath()
+			// newStatus := m.git.GetStatus()
+			// m.state.SetGitStatus(newStatus)
+			// m.fileTree.UpdateDirectoryTree(newStatus.Directory, filepath)
 		default:
 			// m.state.SetMessage(msg.String())
 		}
@@ -136,6 +173,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	if m.committing {
+		return m.textInput.View()
+	}
+
 	width := m.state.GetViewWidth()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()

@@ -6,7 +6,6 @@ require (
 	github.com/charmbracelet/bubbles v0.16.1
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.7.1
-	github.com/erikgeiser/promptkit v0.9.0
 	github.com/google/go-cmp v0.5.9
 )
 
