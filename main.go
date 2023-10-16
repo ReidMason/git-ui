@@ -129,7 +129,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				ti.Placeholder = "Commit message"
 				ti.Focus()
 				ti.CharLimit = 156
-				ti.Width = m.state.GetViewWidth()
+				ti.Width = m.state.GetViewWidth() - 10
 				m.textInput = ti
 			}
 		default:
@@ -177,16 +177,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	if m.committing {
-		return m.textInput.View()
-	}
 
 	width := m.state.GetViewWidth()
 	height := m.state.GetViewHeight()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
-	return ui.RenderMainView(width, height, m.fileTree, diffs)
+
+	display := ui.RenderMainView(width, height, m.fileTree, diffs)
+
+	if m.committing {
+		style := lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+		textInputDisplay := style.Render(m.textInput.View())
+		textInputDisplay = lipgloss.PlaceHorizontal(width, lipgloss.Center, textInputDisplay)
+		textInputDisplay = lipgloss.PlaceVertical(height, lipgloss.Center, textInputDisplay)
+
+		return textInputDisplay
+	}
+
+	return display
 }
 
 func main() {
