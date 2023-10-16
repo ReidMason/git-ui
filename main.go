@@ -187,7 +187,7 @@ func (m Model) View() string {
 	display := ui.RenderMainView(width, height, m.fileTree, diffs)
 
 	if m.committing {
-		style := lipgloss.NewStyle().Border(lipgloss.RoundedBorder())
+		style := lipgloss.NewStyle().Width(width - 10).Border(lipgloss.RoundedBorder())
 		textInputDisplay := style.Render(m.textInput.View())
 		textInputDisplay = lipgloss.PlaceHorizontal(width, lipgloss.Center, textInputDisplay)
 		textInputDisplay = lipgloss.PlaceVertical(height, lipgloss.Center, textInputDisplay)
