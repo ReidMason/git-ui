@@ -28,15 +28,15 @@ import (
 // Write a test for this
 
 type Model struct {
-	state            state.State
+	textInput        textinput.Model
 	git              git.Git
+	selectedFilepath string
 	lviewport        viewport.Model
 	rviewport        viewport.Model
-	selectedFilepath string
 	diff             git.Diff
+	state            state.State
 	fileTree         filetree.FileTree
 	committing       bool
-	textInput        textinput.Model
 	ready            bool
 }
 
