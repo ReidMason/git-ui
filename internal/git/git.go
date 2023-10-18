@@ -51,19 +51,19 @@ func parseAheadAndBehind(line string) (int, int) {
 	ahead := 0
 	behind := 0
 
-	if len(elements) >= 2 {
-		ahead, _ = strconv.Atoi(elements[1])
+	if len(elements) >= 3 {
+		ahead, _ = strconv.Atoi(elements[2])
 	}
 
-	if len(elements) >= 3 {
-		behind, _ = strconv.Atoi(elements[2])
+	if len(elements) >= 4 {
+		behind, _ = strconv.Atoi(elements[3])
 	}
 
 	return ahead, behind
 }
 
 func parseUpstream(line string) string {
-	return strings.TrimPrefix(line, "branch.head ")
+	return strings.TrimPrefix(line, "# branch.upstream ")
 }
 
 func (g Git) GetStatus() GitStatus {
