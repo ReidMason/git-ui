@@ -2,7 +2,6 @@ package filetree
 
 import (
 	"git-ui/internal/styling"
-	"log"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -164,8 +163,6 @@ func (ft *FileTree) setCursorIndex(cursorIndex int) {
 
 	ft.cursorIndex = cursorIndex
 	ft.fileTreeItems[cursorIndex].setSelected(true)
-	selectedItem := ft.fileTreeItems[cursorIndex]
-	log.Println(selectedItem.getFilePath(), cursorIndex)
 }
 
 func (ft *FileTree) handleKeyEnter() {
