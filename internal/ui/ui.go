@@ -47,8 +47,13 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 }
 
 func RenderStatusBar(status git.GitStatus, viewWidth int) string {
-	output := fmt.Sprintf("%d %d", status.Ahead, status.Behind)
+	ahead := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Green)).Render(fmt.Sprint(status.Ahead))
+	behind := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Red)).Render(fmt.Sprint(status.Behind))
+	output := fmt.Sprintf("%s | ⬆ %s | ⬇ %s ", status.Upstream, ahead, behind)
+
 	width := viewWidth - BorderStyle.GetHorizontalBorderSize()
+	output = lipgloss.PlaceHorizontal(width, lipgloss.Right, output)
+
 	output = lipgloss.NewStyle().MaxWidth(width).Render(output)
 	output = lipgloss.NewStyle().Width(width).Render(output)
 	output = BorderStyle.Render(output)
