@@ -184,7 +184,8 @@ func (m Model) View() string {
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
 
-	display := ui.RenderMainView(width, height, m.fileTree, diffs)
+	statusBar := ui.RenderStatusBar(m.state.GetGitStatus(), width)
+	display := ui.RenderMainView(width, height, m.fileTree, diffs, statusBar)
 
 	if m.committing {
 		style := lipgloss.NewStyle().Width(width - 10).Border(lipgloss.RoundedBorder())

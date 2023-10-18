@@ -1,8 +1,10 @@
 package ui
 
 import (
+	"fmt"
 	"git-ui/internal/colours"
 	filetree "git-ui/internal/fileTree"
+	"git-ui/internal/git"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -40,10 +42,20 @@ func getColumnWidth(viewWidth int) int {
 
 func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	headerHeight := 5
-	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight
+	footerHeight := 3
+	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight - footerHeight
 }
 
-func RenderMainView(viewWidth, viewHeight int, fileTree filetree.FileTree, diffs string) string {
+func RenderStatusBar(status git.GitStatus, viewWidth int) string {
+	output := fmt.Sprintf("%d %d", status.Ahead, status.Behind)
+	width := viewWidth - BorderStyle.GetHorizontalBorderSize()
+	output = lipgloss.NewStyle().MaxWidth(width).Render(output)
+	output = lipgloss.NewStyle().Width(width).Render(output)
+	output = BorderStyle.Render(output)
+	return output
+}
+
+func RenderMainView(viewWidth, viewHeight int, fileTree filetree.FileTree, diffs string, statusbar string) string {
 	header := RenderHeader("Git-UI", viewWidth)
 
 	diffWidth, diffHeight := GetDiffDimensions(viewWidth, viewHeight)
@@ -61,5 +73,5 @@ func RenderMainView(viewWidth, viewHeight int, fileTree filetree.FileTree, diffs
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, mainBody)
+	return lipgloss.JoinVertical(lipgloss.Left, header, mainBody, statusbar)
 }
