@@ -3,6 +3,7 @@ package git
 import (
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/utils"
+	"strconv"
 	"strings"
 )
 
@@ -30,25 +31,60 @@ const (
 
 type GitStatus struct {
 	Directory *Directory
+	Head      string
+	Upstream  string
+	Ahead     int
+	Behind    int
+}
+
+func parseHead(line string) string {
+	elements := strings.Split(line, " ")
+	if len(elements) < 3 {
+		return "Unknown"
+	}
+
+	return elements[2]
+}
+
+func parseAheadAndBehind(line string) (int, int) {
+	elements := strings.Split(line, " ")
+	ahead := 0
+	behind := 0
+
+	if len(elements) >= 2 {
+		ahead, _ = strconv.Atoi(elements[1])
+	}
+
+	if len(elements) >= 3 {
+		behind, _ = strconv.Atoi(elements[2])
+	}
+
+	return ahead, behind
+}
+
+func parseUpstream(line string) string {
+	return strings.TrimPrefix(line, "branch.head ")
 }
 
 func (g Git) GetStatus() GitStatus {
 	rawStatus := g.commandRunner.GetStatus()
 	lines := strings.Split(rawStatus, "\n")
 
-	// First four lines are branch data so skip them for now
-	lines = lines[4:]
+	gitStatus := GitStatus{
+		Head:      parseHead(lines[1]),
+		Upstream:  parseUpstream(lines[2]),
+		Directory: newDirectory("Root", ".", nil),
+	}
+	gitStatus.Ahead, gitStatus.Behind = parseAheadAndBehind(lines[3])
 
-	directory := newDirectory("Root", ".", nil)
-
-	for _, line := range lines {
+	for _, line := range lines[4:] {
 		firstRune, lineString := utils.TrimFirstRune(line)
 		lineString = strings.TrimSpace(lineString)
 		changeType := StatusChangeType(firstRune)
 
 		if changeType == changed {
 			file := parseChangedStatusLine(lineString)
-			addFile(directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
+			addFile(gitStatus.Directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
 		}
 		//   else if changeType == copied {
 		//
@@ -59,7 +95,7 @@ func (g Git) GetStatus() GitStatus {
 		// }
 	}
 
-	return GitStatus{Directory: directory}
+	return gitStatus
 }
 
 func parseChangedStatusLine(line string) File {
