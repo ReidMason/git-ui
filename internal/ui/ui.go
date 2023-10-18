@@ -46,13 +46,20 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight - footerHeight
 }
 
-func RenderStatusBar(status git.GitStatus, viewWidth int) string {
+func RenderStatusBar(status git.GitStatus, viewWidth int, commitInput string, committing bool) string {
 	ahead := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Green)).Render(fmt.Sprint(status.Ahead))
 	behind := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Red)).Render(fmt.Sprint(status.Behind))
-	output := fmt.Sprintf("%s | ⬆ %s | ⬇ %s ", status.Upstream, ahead, behind)
+	output := fmt.Sprintf("%s | %s↑ | %s↓ ", status.Upstream, ahead, behind)
 
 	width := viewWidth - BorderStyle.GetHorizontalBorderSize()
-	output = lipgloss.PlaceHorizontal(width, lipgloss.Right, output)
+	output = lipgloss.PlaceHorizontal(width-50, lipgloss.Right, output)
+
+	if !committing {
+		commitInput = ""
+	}
+	commitInput = lipgloss.NewStyle().Width(50).Render(commitInput)
+	commitInput = lipgloss.NewStyle().MaxWidth(50).Render(commitInput)
+	output = lipgloss.JoinHorizontal(0, commitInput, output)
 
 	output = lipgloss.NewStyle().MaxWidth(width).Render(output)
 	output = lipgloss.NewStyle().Width(width).Render(output)

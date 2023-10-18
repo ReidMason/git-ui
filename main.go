@@ -129,7 +129,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				ti.Placeholder = "Commit message"
 				ti.Focus()
 				ti.CharLimit = 156
-				ti.Width = m.state.GetViewWidth() - 10
+
+				// This needs to be three less than it's actual width to account for the extra characters
+				ti.Width = 47 // m.state.GetViewWidth() - 10
+
 				m.textInput = ti
 			}
 		default:
@@ -177,24 +180,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-
 	width := m.state.GetViewWidth()
 	height := m.state.GetViewHeight()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
 
-	statusBar := ui.RenderStatusBar(m.state.GetGitStatus(), width)
+	statusBar := ui.RenderStatusBar(m.state.GetGitStatus(), width, m.textInput.View(), m.committing)
 	display := ui.RenderMainView(width, height, m.fileTree, diffs, statusBar)
-
-	if m.committing {
-		style := lipgloss.NewStyle().Width(width - 10).Border(lipgloss.RoundedBorder())
-		textInputDisplay := style.Render(m.textInput.View())
-		textInputDisplay = lipgloss.PlaceHorizontal(width, lipgloss.Center, textInputDisplay)
-		textInputDisplay = lipgloss.PlaceVertical(height, lipgloss.Center, textInputDisplay)
-
-		return textInputDisplay
-	}
 
 	return display
 }
