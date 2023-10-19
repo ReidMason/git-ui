@@ -169,7 +169,11 @@ func (ft *FileTree) setCursorIndex(cursorIndex int) {
 }
 
 func (ft *FileTree) handleKeyEnter() {
-	selected := ft.fileTreeItems[ft.cursorIndex]
+	selected, err := ft.GetSelectedItem()
+	if err != nil {
+		return
+	}
+
 	selected.toggleExpanded()
 }
 
@@ -302,7 +306,9 @@ func (ft FileTree) GetSelectedItem() (FileTreeElement, error) {
 		return fileTreeElement, errors.New("No elements in file tree")
 	}
 
-	return ft.fileTreeItems[ft.cursorIndex], nil
+	index := min(max(0, ft.cursorIndex), len(ft.fileTreeItems)-1)
+
+	return ft.fileTreeItems[index], nil
 }
 
 func (ft FileTree) buildFileTreeString() []string {
