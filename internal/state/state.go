@@ -5,9 +5,9 @@ import (
 )
 
 type State struct {
+	selectedFilepath string
 	diff             git.Diff
 	gitStatus        git.GitStatus
-	selectedFilepath string
 	viewWidth        int
 	viewHeight       int
 }

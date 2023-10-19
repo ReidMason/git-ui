@@ -48,7 +48,7 @@ func initModel() Model {
 	}
 
 	gitStatus := model.git.GetStatus()
-	model.state.SetGitStatus(gitStatus)
+	model.state = model.state.SetGitStatus(gitStatus)
 	model.fileTree = filetree.New(gitStatus.Directory)
 
 	model.state.SetSelectedFilepath(model.fileTree.GetSelectedFilepath())
@@ -64,8 +64,8 @@ func (m Model) Init() tea.Cmd {
 }
 
 type GitStatusUpdate struct {
-	newGitStatus git.GitStatus
 	oldFilepath  string
+	newGitStatus git.GitStatus
 }
 
 func toggleStageFile(m Model) tea.Cmd {
