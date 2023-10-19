@@ -201,9 +201,12 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 		m.textInput.Blur()
 		m.fileTree.SetFocused(true)
 
-		newStatus := m.git.GetStatus()
-		m.state.SetGitStatus(newStatus)
-		m.fileTree = m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
+		return m, func() tea.Msg {
+			return GitStatusUpdate{
+				newGitStatus: m.git.GetStatus(),
+				oldFilepath:  m.state.GetSelectedFilepath(),
+			}
+		}
 	case "c":
 		if !m.textInput.Focused() {
 			m.fileTree.SetFocused(false)
