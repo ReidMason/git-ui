@@ -188,9 +188,9 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 			m.textInput.Blur()
 			m.fileTree.SetFocused(true)
 			commitMessage := m.textInput.Value()
-			m.git.Commit(commitMessage)
 
 			return m, func() tea.Msg {
+				m.git.Commit(commitMessage)
 				return GitStatusUpdate{
 					newGitStatus: m.git.GetStatus(),
 					oldFilepath:  m.state.GetSelectedFilepath(),
