@@ -66,27 +66,27 @@ func toggleStageFile(m Model) tea.Cmd {
 	return func() tea.Msg {
 		selectedElement := m.fileTree.GetSelectedItem()
 		selectedItem := selectedElement.GetItem()
-		if selectedItem != nil {
-			filepath := selectedItem.GetFilePath()
-
-			stage := true
-			switch item := selectedItem.(type) {
-			case *git.Directory:
-				stage = item.GetStagedStatus() != git.FullyStaged
-			case git.File:
-				stage = !item.IsStaged()
-			}
-
-			if stage {
-				m.git.Stage(filepath)
-			} else {
-				m.git.Unstage(filepath)
-			}
-
-			return GitStatusUpdate{newGitStatus: m.git.GetStatus(), oldFilepath: filepath}
+		if selectedItem == nil {
+			return nil
 		}
 
-		return nil
+		filepath := selectedItem.GetFilePath()
+
+		stage := true
+		switch item := selectedItem.(type) {
+		case *git.Directory:
+			stage = item.GetStagedStatus() != git.FullyStaged
+		case git.File:
+			stage = !item.IsStaged()
+		}
+
+		if stage {
+			m.git.Stage(filepath)
+		} else {
+			m.git.Unstage(filepath)
+		}
+
+		return GitStatusUpdate{newGitStatus: m.git.GetStatus(), oldFilepath: filepath}
 	}
 }
 
