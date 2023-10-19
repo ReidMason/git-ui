@@ -28,23 +28,21 @@ import (
 // Write a test for this
 
 type Model struct {
-	textInput  textinput.Model
-	git        git.Git
-	lviewport  viewport.Model
-	rviewport  viewport.Model
-	state      state.State
-	fileTree   filetree.FileTree
-	committing bool
-	ready      bool
+	textInput textinput.Model
+	git       git.Git
+	lviewport viewport.Model
+	rviewport viewport.Model
+	state     state.State
+	fileTree  filetree.FileTree
+	ready     bool
 }
 
 func initModel() Model {
 	gitCommands := gitcommands.New()
 
 	model := Model{
-		git:        git.New(gitCommands),
-		state:      state.New(),
-		committing: false,
+		git:   git.New(gitCommands),
+		state: state.New(),
 	}
 
 	model.fileTree.SetFocused(true)
@@ -99,7 +97,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.fileTree, cmd = m.fileTree.Update(msg, toggleStageFile(m))
 	cmds = append(cmds, cmd)
 
-	if m.committing {
+	if m.textInput.Focused() {
 		m.textInput, _ = m.textInput.Update(msg)
 	}
 
@@ -162,8 +160,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 	case "ctrl+c", "q":
 		return m, tea.Quit
 	case "enter":
-		if m.committing {
-			m.committing = false
+		if m.textInput.Focused() {
 			m.fileTree.SetFocused(true)
 			commitMessage := m.textInput.Value()
 			m.git.Commit(commitMessage)
@@ -173,15 +170,14 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 			m.fileTree = m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
 		}
 	case "esc":
-		m.committing = false
+		m.textInput.Blur()
 		m.fileTree.SetFocused(true)
 
 		newStatus := m.git.GetStatus()
 		m.state.SetGitStatus(newStatus)
 		m.fileTree = m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
 	case "c":
-		if !m.committing {
-			m.committing = true
+		if !m.textInput.Focused() {
 			m.fileTree.SetFocused(false)
 			ti := textinput.New()
 			ti.Placeholder = "Commit message"
@@ -189,7 +185,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 			ti.CharLimit = 156
 
 			// This needs to be three less than it's actual width to account for the extra characters
-			ti.Width = 47 // m.state.GetViewWidth() - 10
+			ti.Width = 47 //m.state.GetViewWidth() - 10
 
 			m.textInput = ti
 		}
@@ -205,7 +201,7 @@ func (m Model) View() string {
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
 
-	statusBar := ui.RenderStatusBar(m.state.GetGitStatus(), width, m.textInput.View(), m.committing)
+	statusBar := ui.RenderStatusBar(m.state.GetGitStatus(), width, m.textInput.View(), m.textInput.Focused())
 	display := ui.RenderMainView(width, height, m.fileTree, diffs, statusBar)
 
 	return display
