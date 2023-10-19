@@ -7,6 +7,7 @@ import (
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/state"
 	"git-ui/internal/ui"
+	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -28,16 +29,14 @@ import (
 // Write a test for this
 
 type Model struct {
-	textInput        textinput.Model
-	git              git.Git
-	selectedFilepath string
-	lviewport        viewport.Model
-	rviewport        viewport.Model
-	diff             git.Diff
-	state            state.State
-	fileTree         filetree.FileTree
-	committing       bool
-	ready            bool
+	textInput  textinput.Model
+	git        git.Git
+	lviewport  viewport.Model
+	rviewport  viewport.Model
+	state      state.State
+	fileTree   filetree.FileTree
+	committing bool
+	ready      bool
 }
 
 func initModel() Model {
@@ -53,9 +52,9 @@ func initModel() Model {
 	model.state.SetGitStatus(gitStatus)
 	model.fileTree = filetree.New(gitStatus.Directory)
 
-	model.selectedFilepath = model.fileTree.GetSelectedFilepath()
-	if model.selectedFilepath != "" {
-		model.diff = model.git.GetDiff(model.selectedFilepath)
+	model.state.SetSelectedFilepath(model.fileTree.GetSelectedFilepath())
+	if model.state.GetSelectedFilepath() != "" {
+		model.state.SetDiff(model.git.GetDiff(model.fileTree.GetSelectedFilepath()))
 	}
 
 	return model
@@ -67,7 +66,7 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
-		// cmd  tea.Cmd
+		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 
@@ -100,45 +99,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "enter":
-			if m.committing {
-				m.committing = false
-				m.fileTree.SetFocused(true)
-				commitMessage := m.textInput.Value()
-				m.git.Commit(commitMessage)
-
-				newStatus := m.git.GetStatus()
-				m.state.SetGitStatus(newStatus)
-				m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.selectedFilepath)
-			}
-		case "esc":
-			m.committing = false
-			m.fileTree.SetFocused(true)
-
-			newStatus := m.git.GetStatus()
-			m.state.SetGitStatus(newStatus)
-			m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.selectedFilepath)
-		case "c":
-			if !m.committing {
-				m.committing = true
-				m.fileTree.SetFocused(false)
-				ti := textinput.New()
-				ti.Placeholder = "Commit message"
-				ti.Focus()
-				ti.CharLimit = 156
-
-				// This needs to be three less than it's actual width to account for the extra characters
-				ti.Width = 47 // m.state.GetViewWidth() - 10
-
-				m.textInput = ti
-			}
-		default:
-			// m.state.SetMessage(msg.String())
-		}
-
+		m, cmd = m.handleKeypress(msg)
+		cmds = append(cmds, cmd)
 	case tea.WindowSizeMsg:
 		m.state.SetViewWidth(msg.Width)
 		m.state.SetViewHeight(msg.Height)
@@ -147,8 +109,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
 			m.lviewport = viewport.New(diffWidth, diffHeight)
 			m.rviewport = viewport.New(diffWidth, diffHeight)
-			m.lviewport.SetContent(git.DiffToString(m.diff.Diff1))
-			m.rviewport.SetContent(git.DiffToString(m.diff.Diff2))
+			m.lviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff1))
+			m.rviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff2))
 
 			m.ready = true
 		} else {
@@ -159,14 +121,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.rviewport.Width = diffWidth
 			m.rviewport.Height = diffHeight
 		}
+	default:
+		log.Println("From update: ", msg)
 	}
 
 	newSelectedFilepath := m.fileTree.GetSelectedFilepath()
-	if newSelectedFilepath != m.selectedFilepath {
-		m.selectedFilepath = newSelectedFilepath
-		m.diff = m.git.GetDiff(newSelectedFilepath)
-		m.lviewport.SetContent(git.DiffToString(m.diff.Diff1))
-		m.rviewport.SetContent(git.DiffToString(m.diff.Diff2))
+	if newSelectedFilepath != m.state.GetSelectedFilepath() {
+		m.state.SetSelectedFilepath(newSelectedFilepath)
+		m.state.SetDiff(m.git.GetDiff(newSelectedFilepath))
+		m.lviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff1))
+		m.rviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff2))
 		m.lviewport.GotoTop()
 		m.rviewport.GotoTop()
 	}
@@ -177,6 +141,49 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
+}
+
+func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c", "q":
+		return m, tea.Quit
+	case "enter":
+		if m.committing {
+			m.committing = false
+			m.fileTree.SetFocused(true)
+			commitMessage := m.textInput.Value()
+			m.git.Commit(commitMessage)
+
+			newStatus := m.git.GetStatus()
+			m.state.SetGitStatus(newStatus)
+			m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
+		}
+	case "esc":
+		m.committing = false
+		m.fileTree.SetFocused(true)
+
+		newStatus := m.git.GetStatus()
+		m.state.SetGitStatus(newStatus)
+		m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
+	case "c":
+		if !m.committing {
+			m.committing = true
+			m.fileTree.SetFocused(false)
+			ti := textinput.New()
+			ti.Placeholder = "Commit message"
+			ti.Focus()
+			ti.CharLimit = 156
+
+			// This needs to be three less than it's actual width to account for the extra characters
+			ti.Width = 47 // m.state.GetViewWidth() - 10
+
+			m.textInput = ti
+		}
+	default:
+		// log.Println("From update: ", msg.String())
+	}
+
+	return m, nil
 }
 
 func (m Model) View() string {

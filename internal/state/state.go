@@ -5,10 +5,11 @@ import (
 )
 
 type State struct {
-	gitStatus  git.GitStatus
-	message    string
-	viewWidth  int
-	viewHeight int
+	diff             git.Diff
+	gitStatus        git.GitStatus
+	selectedFilepath string
+	viewWidth        int
+	viewHeight       int
 }
 
 func New() State {
@@ -18,11 +19,14 @@ func New() State {
 func (s State) GetGitStatus() git.GitStatus           { return s.gitStatus }
 func (s *State) SetGitStatus(gitStatus git.GitStatus) { s.gitStatus = gitStatus }
 
-func (s State) GetMessage() string         { return s.message }
-func (s *State) SetMessage(message string) { s.message = message }
-
 func (s State) GetViewWidth() int           { return s.viewWidth }
 func (s *State) SetViewWidth(viewWidth int) { s.viewWidth = viewWidth }
 
 func (s State) GetViewHeight() int            { return s.viewHeight }
 func (s *State) SetViewHeight(viewHeight int) { s.viewHeight = viewHeight }
+
+func (s State) GetDiff() git.Diff      { return s.diff }
+func (s *State) SetDiff(diff git.Diff) { s.diff = diff }
+
+func (s State) GetSelectedFilepath() string                  { return s.selectedFilepath }
+func (s *State) SetSelectedFilepath(selectedFilepath string) { s.selectedFilepath = selectedFilepath }
