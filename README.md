@@ -7,3 +7,5 @@ A terminal based git interface
 - [ ] Diff colouring/styling
 - [ ] Make use of `CMD`s in BubbleTea
 - [ ] Allow the staging of hunks or line by line
+- [ ] Add pushing to git
+- [ ] Add scrolling to file tree list
