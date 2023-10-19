@@ -64,7 +64,7 @@ func (m Model) Init() tea.Cmd {
 		firstFilepath = gitStatus.Directory.Filepath
 	}
 
-	cmds = append(cmds, m.handleFileTreeChange("", firstFilepath))
+	cmds = append(cmds, m.handleFileTreeChange(firstFilepath))
 
 	return tea.Batch(cmds...)
 }
@@ -103,13 +103,11 @@ func (m Model) toggleStageFile() tea.Cmd {
 }
 
 type DiffUpdate struct {
-	newDiff       git.Diff
-	resetViewport bool
+	newDiff git.Diff
 }
 
-func (m *Model) handleFileTreeChange(currFilepath, filepath string) tea.Cmd {
+func (m *Model) handleFileTreeChange(filepath string) tea.Cmd {
 	return func() tea.Msg {
-		// resetViewport := currFilepath != m.fileTree.GetSelectedFilepath()
 		if filepath == "" {
 			filepath = m.fileTree.GetSelectedFilepath()
 		}
@@ -125,7 +123,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	)
 
 	currFilepath := m.fileTree.GetSelectedFilepath()
-	m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(currFilepath, ""))
+	m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(currFilepath))
 	cmds = append(cmds, cmd)
 
 	if m.textInput.Focused() {

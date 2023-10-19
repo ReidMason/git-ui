@@ -145,9 +145,9 @@ index 35b5809..4492ac6 100644
 
 func TestGetStatus(t *testing.T) {
 	testCases := []struct {
-		expected  GitStatus
 		name      string
 		rawStatus string
+		expected  GitStatus
 	}{
 		{
 			name: "Just status",
