@@ -47,20 +47,14 @@ func initModel() Model {
 		committing: false,
 	}
 
-	gitStatus := model.git.GetStatus()
-	model.state = model.state.SetGitStatus(gitStatus)
-	model.fileTree = filetree.New(gitStatus.Directory)
-
-	model.state.SetSelectedFilepath(model.fileTree.GetSelectedFilepath())
-	if model.state.GetSelectedFilepath() != "" {
-		model.state.SetDiff(model.git.GetDiff(model.fileTree.GetSelectedFilepath()))
-	}
+	model.fileTree.SetFocused(true)
 
 	return model
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	gitStatus := m.git.GetStatus()
+	return func() tea.Msg { return GitStatusUpdate{newGitStatus: gitStatus, oldFilepath: ""} }
 }
 
 type GitStatusUpdate struct {
