@@ -51,8 +51,22 @@ func initModel() Model {
 }
 
 func (m Model) Init() tea.Cmd {
+	var (
+		cmds []tea.Cmd
+	)
+
 	gitStatus := m.git.GetStatus()
-	return func() tea.Msg { return GitStatusUpdate{newGitStatus: gitStatus, oldFilepath: ""} }
+	updateStatusCmd := func() tea.Msg { return GitStatusUpdate{newGitStatus: gitStatus, oldFilepath: ""} }
+	cmds = append(cmds, updateStatusCmd)
+
+	firstFilepath := ""
+	if gitStatus.Directory != nil {
+		firstFilepath = gitStatus.Directory.Filepath
+	}
+
+	cmds = append(cmds, m.handleFileTreeChange("", firstFilepath))
+
+	return tea.Batch(cmds...)
 }
 
 type GitStatusUpdate struct {
@@ -60,7 +74,7 @@ type GitStatusUpdate struct {
 	newGitStatus git.GitStatus
 }
 
-func toggleStageFile(m Model) tea.Cmd {
+func (m Model) toggleStageFile() tea.Cmd {
 	return func() tea.Msg {
 		selectedElement := m.fileTree.GetSelectedItem()
 		selectedItem := selectedElement.GetItem()
@@ -88,13 +102,30 @@ func toggleStageFile(m Model) tea.Cmd {
 	}
 }
 
+type DiffUpdate struct {
+	newDiff       git.Diff
+	resetViewport bool
+}
+
+func (m *Model) handleFileTreeChange(currFilepath, filepath string) tea.Cmd {
+	return func() tea.Msg {
+		// resetViewport := currFilepath != m.fileTree.GetSelectedFilepath()
+		if filepath == "" {
+			filepath = m.fileTree.GetSelectedFilepath()
+		}
+		diff := m.git.GetDiff(filepath)
+		return DiffUpdate{newDiff: diff}
+	}
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 
-	m.fileTree, cmd = m.fileTree.Update(msg, toggleStageFile(m))
+	currFilepath := m.fileTree.GetSelectedFilepath()
+	m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(currFilepath, ""))
 	cmds = append(cmds, cmd)
 
 	if m.textInput.Focused() {
@@ -111,14 +142,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case GitStatusUpdate:
 		m.state = m.state.SetGitStatus(msg.newGitStatus)
 		m.fileTree = m.fileTree.UpdateDirectoryTree(msg.newGitStatus.Directory, msg.oldFilepath)
-	}
-
-	newSelectedFilepath := m.fileTree.GetSelectedFilepath()
-	if newSelectedFilepath != m.state.GetSelectedFilepath() {
-		m.state.SetSelectedFilepath(newSelectedFilepath)
-		m.state.SetDiff(m.git.GetDiff(newSelectedFilepath))
-		m.lviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff1))
-		m.rviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff2))
+	case DiffUpdate:
+		m.lviewport.SetContent(git.DiffToString(msg.newDiff.Diff1))
+		m.rviewport.SetContent(git.DiffToString(msg.newDiff.Diff2))
 		m.lviewport.GotoTop()
 		m.rviewport.GotoTop()
 	}
@@ -139,8 +165,6 @@ func (m Model) handleWindowSizeMsg(msg tea.WindowSizeMsg) (Model, tea.Cmd) {
 		diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
 		m.lviewport = viewport.New(diffWidth, diffHeight)
 		m.rviewport = viewport.New(diffWidth, diffHeight)
-		m.lviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff1))
-		m.rviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff2))
 
 		m.ready = true
 	} else {

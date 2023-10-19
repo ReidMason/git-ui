@@ -90,7 +90,7 @@ func (ft FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath 
 	return ft
 }
 
-func (ft FileTree) Update(msg tea.Msg, spaceCmd tea.Cmd) (FileTree, tea.Cmd) {
+func (ft FileTree) Update(msg tea.Msg, spaceCmd, fileTreeChangeCmd tea.Cmd) (FileTree, tea.Cmd) {
 	if !ft.isFocused {
 		return ft, nil
 	}
@@ -120,8 +120,10 @@ func (ft FileTree) Update(msg tea.Msg, spaceCmd tea.Cmd) (FileTree, tea.Cmd) {
 		switch {
 		case key.Matches(msg, keyDown):
 			ft.handleKeyDown()
+			return ft, fileTreeChangeCmd
 		case key.Matches(msg, keyUp):
 			ft.handleKeyUp()
+			return ft, fileTreeChangeCmd
 		case key.Matches(msg, keyEnter):
 			ft.handleKeyEnter()
 		case key.Matches(msg, keySpace):

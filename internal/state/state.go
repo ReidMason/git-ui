@@ -6,7 +6,6 @@ import (
 
 type State struct {
 	selectedFilepath string
-	diff             git.Diff
 	gitStatus        git.GitStatus
 	viewWidth        int
 	viewHeight       int
@@ -27,9 +26,6 @@ func (s *State) SetViewWidth(viewWidth int) { s.viewWidth = viewWidth }
 
 func (s State) GetViewHeight() int            { return s.viewHeight }
 func (s *State) SetViewHeight(viewHeight int) { s.viewHeight = viewHeight }
-
-func (s State) GetDiff() git.Diff      { return s.diff }
-func (s *State) SetDiff(diff git.Diff) { s.diff = diff }
 
 func (s State) GetSelectedFilepath() string                  { return s.selectedFilepath }
 func (s *State) SetSelectedFilepath(selectedFilepath string) { s.selectedFilepath = selectedFilepath }
