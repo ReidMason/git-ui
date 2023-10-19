@@ -161,6 +161,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, tea.Quit
 	case "enter":
 		if m.textInput.Focused() {
+			m.textInput.Blur()
 			m.fileTree.SetFocused(true)
 			commitMessage := m.textInput.Value()
 			m.git.Commit(commitMessage)
