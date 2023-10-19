@@ -102,25 +102,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.handleKeypress(msg)
 		cmds = append(cmds, cmd)
 	case tea.WindowSizeMsg:
-		m.state.SetViewWidth(msg.Width)
-		m.state.SetViewHeight(msg.Height)
-
-		if !m.ready {
-			diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
-			m.lviewport = viewport.New(diffWidth, diffHeight)
-			m.rviewport = viewport.New(diffWidth, diffHeight)
-			m.lviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff1))
-			m.rviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff2))
-
-			m.ready = true
-		} else {
-			diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
-			m.lviewport.Width = diffWidth
-			m.lviewport.Height = diffHeight
-
-			m.rviewport.Width = diffWidth
-			m.rviewport.Height = diffHeight
-		}
+		m, cmd = m.handleWindowSizeMsg(msg)
+		cmds = append(cmds, cmd)
 	default:
 		log.Println("From update: ", msg)
 	}
@@ -141,6 +124,30 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
+}
+
+func (m Model) handleWindowSizeMsg(msg tea.WindowSizeMsg) (Model, tea.Cmd) {
+	m.state.SetViewWidth(msg.Width)
+	m.state.SetViewHeight(msg.Height)
+
+	if !m.ready {
+		diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
+		m.lviewport = viewport.New(diffWidth, diffHeight)
+		m.rviewport = viewport.New(diffWidth, diffHeight)
+		m.lviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff1))
+		m.rviewport.SetContent(git.DiffToString(m.state.GetDiff().Diff2))
+
+		m.ready = true
+	} else {
+		diffWidth, diffHeight := ui.GetDiffDimensions(msg.Width, msg.Height)
+		m.lviewport.Width = diffWidth
+		m.lviewport.Height = diffHeight
+
+		m.rviewport.Width = diffWidth
+		m.rviewport.Height = diffHeight
+	}
+
+	return m, nil
 }
 
 func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
