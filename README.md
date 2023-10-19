@@ -9,3 +9,5 @@ A terminal based git interface
 - [ ] Allow the staging of hunks or line by line
 - [ ] Add pushing to git
 - [ ] Add scrolling to file tree list
+- [ ] Have a fully responsive design
+- [ ] Add theme support
