@@ -1,6 +1,7 @@
 package filetree
 
 import (
+	"errors"
 	"git-ui/internal/styling"
 	"strings"
 
@@ -287,12 +288,21 @@ func (ft FileTree) GetSelectedFilepath() string {
 		return ""
 	}
 
-	selectedItem := ft.GetSelectedItem()
+	selectedItem, err := ft.GetSelectedItem()
+	if err != nil {
+		return ""
+	}
+
 	return selectedItem.getFilePath()
 }
 
-func (ft FileTree) GetSelectedItem() FileTreeElement {
-	return ft.fileTreeItems[ft.cursorIndex]
+func (ft FileTree) GetSelectedItem() (FileTreeElement, error) {
+	if len(ft.fileTreeItems) == 0 {
+		var fileTreeElement FileTreeElement
+		return fileTreeElement, errors.New("No elements in file tree")
+	}
+
+	return ft.fileTreeItems[ft.cursorIndex], nil
 }
 
 func (ft FileTree) buildFileTreeString() []string {

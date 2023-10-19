@@ -76,7 +76,11 @@ type GitStatusUpdate struct {
 
 func (m Model) toggleStageFile() tea.Cmd {
 	return func() tea.Msg {
-		selectedElement := m.fileTree.GetSelectedItem()
+		selectedElement, err := m.fileTree.GetSelectedItem()
+		if err != nil {
+			return nil
+		}
+
 		selectedItem := selectedElement.GetItem()
 		if selectedItem == nil {
 			return nil
