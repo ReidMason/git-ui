@@ -70,7 +70,7 @@ func addFile(directory *Directory, dirpath []string, visitedDirs []string, newFi
 
 	for _, subdir := range directory.Directories {
 		if subdir.Name == dirpath[0] {
-			addFile(subdir, dirpath[1:], dirpath, newFile)
+			addFile(subdir, dirpath[1:], visitedDirs, newFile)
 			return
 		}
 	}
