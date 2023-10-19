@@ -16,8 +16,11 @@ func New() State {
 	return State{}
 }
 
-func (s State) GetGitStatus() git.GitStatus           { return s.gitStatus }
-func (s *State) SetGitStatus(gitStatus git.GitStatus) { s.gitStatus = gitStatus }
+func (s State) GetGitStatus() git.GitStatus { return s.gitStatus }
+func (s State) SetGitStatus(gitStatus git.GitStatus) State {
+	s.gitStatus = gitStatus
+	return s
+}
 
 func (s State) GetViewWidth() int           { return s.viewWidth }
 func (s *State) SetViewWidth(viewWidth int) { s.viewWidth = viewWidth }

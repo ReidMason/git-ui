@@ -14,7 +14,7 @@ type FileTreeElement interface {
 	toggleExpanded()
 	isVisible() bool
 	getFilePath() string
-	getItem() FileTreeItem
+	GetItem() FileTreeItem
 }
 
 type Directory struct {
@@ -33,7 +33,7 @@ func newDirectory(parent *Directory, item FileTreeItem) Directory {
 func (d *Directory) setSelected(selected bool) { d.selected = selected }
 func (d Directory) getFilePath() string        { return d.item.GetFilePath() }
 func (d *Directory) toggleExpanded()           { d.expanded = !d.expanded }
-func (d Directory) getItem() FileTreeItem      { return d.item }
+func (d Directory) GetItem() FileTreeItem      { return d.item }
 func (d Directory) isVisible() bool {
 	if d.parent == nil {
 		return true
@@ -50,7 +50,7 @@ type File struct {
 
 func (f *File) setSelected(selected bool) { f.selected = selected }
 func (f File) getFilePath() string        { return f.item.GetFilePath() }
-func (f File) getItem() FileTreeItem      { return f.item }
+func (f File) GetItem() FileTreeItem      { return f.item }
 func (f *File) toggleExpanded()           {}
 func (f File) isVisible() bool            { return f.parent.isVisible() && f.parent.expanded }
 
@@ -72,27 +72,27 @@ type FileTree struct {
 	fileTreeItems []FileTreeElement
 	root          Directory
 	cursorIndex   int
-	isFocused     bool
 	width         int
+	isFocused     bool
 }
 
 func New(directory FileTreeItem) FileTree {
 	fileTree := FileTree{
 		isFocused: true,
 	}
-	fileTree.UpdateDirectoryTree(directory, "")
 
-	return fileTree
+	return fileTree.UpdateDirectoryTree(directory, "")
 }
 
-func (ft *FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath string) {
+func (ft FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath string) FileTree {
 	cursorIndex := ft.buildTree(directory, selectedFilepath)
 	ft.setCursorIndex(cursorIndex)
+	return ft
 }
 
-func (ft *FileTree) Update(msg tea.Msg) FileTreeItem {
+func (ft FileTree) Update(msg tea.Msg, spaceCmd tea.Cmd) (FileTree, tea.Cmd) {
 	if !ft.isFocused {
-		return nil
+		return ft, nil
 	}
 
 	keyDown := key.NewBinding(
@@ -125,13 +125,13 @@ func (ft *FileTree) Update(msg tea.Msg) FileTreeItem {
 		case key.Matches(msg, keyEnter):
 			ft.handleKeyEnter()
 		case key.Matches(msg, keySpace):
-			return ft.fileTreeItems[ft.cursorIndex].getItem()
+			return ft, spaceCmd
 		}
 	case tea.WindowSizeMsg:
 		ft.width = msg.Width
 	}
 
-	return nil
+	return ft, nil
 }
 
 func (ft *FileTree) handleKeyDown() {
@@ -285,8 +285,12 @@ func (ft FileTree) GetSelectedFilepath() string {
 		return ""
 	}
 
-	selectedItem := ft.fileTreeItems[ft.cursorIndex]
+	selectedItem := ft.GetSelectedItem()
 	return selectedItem.getFilePath()
+}
+
+func (ft FileTree) GetSelectedItem() FileTreeElement {
+	return ft.fileTreeItems[ft.cursorIndex]
 }
 
 func (ft FileTree) buildFileTreeString() []string {

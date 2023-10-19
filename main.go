@@ -7,7 +7,6 @@ import (
 	gitcommands "git-ui/internal/git_commands"
 	"git-ui/internal/state"
 	"git-ui/internal/ui"
-	"log"
 	"os"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -64,34 +63,47 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+type GitStatusUpdate struct {
+	newGitStatus git.GitStatus
+	oldFilepath  string
+}
+
+func toggleStageFile(m Model) tea.Cmd {
+	return func() tea.Msg {
+		selectedElement := m.fileTree.GetSelectedItem()
+		selectedItem := selectedElement.GetItem()
+		if selectedItem != nil {
+			filepath := selectedItem.GetFilePath()
+
+			stage := true
+			switch item := selectedItem.(type) {
+			case *git.Directory:
+				stage = item.GetStagedStatus() != git.FullyStaged
+			case git.File:
+				stage = !item.IsStaged()
+			}
+
+			if stage {
+				m.git.Stage(filepath)
+			} else {
+				m.git.Unstage(filepath)
+			}
+
+			return GitStatusUpdate{newGitStatus: m.git.GetStatus(), oldFilepath: filepath}
+		}
+
+		return nil
+	}
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
 	)
 
-	selectedItem := m.fileTree.Update(msg)
-	if selectedItem != nil {
-		filepath := selectedItem.GetFilePath()
-
-		stage := true
-		switch item := selectedItem.(type) {
-		case *git.Directory:
-			stage = item.GetStagedStatus() != git.FullyStaged
-		case git.File:
-			stage = !item.IsStaged()
-		}
-
-		if stage {
-			m.git.Stage(filepath)
-		} else {
-			m.git.Unstage(filepath)
-		}
-
-		newStatus := m.git.GetStatus()
-		m.state.SetGitStatus(newStatus)
-		m.fileTree.UpdateDirectoryTree(newStatus.Directory, filepath)
-	}
+	m.fileTree, cmd = m.fileTree.Update(msg, toggleStageFile(m))
+	cmds = append(cmds, cmd)
 
 	if m.committing {
 		m.textInput, _ = m.textInput.Update(msg)
@@ -104,8 +116,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m, cmd = m.handleWindowSizeMsg(msg)
 		cmds = append(cmds, cmd)
-	default:
-		log.Println("From update: ", msg)
+	case GitStatusUpdate:
+		m.state = m.state.SetGitStatus(msg.newGitStatus)
+		m.fileTree = m.fileTree.UpdateDirectoryTree(msg.newGitStatus.Directory, msg.oldFilepath)
 	}
 
 	newSelectedFilepath := m.fileTree.GetSelectedFilepath()
@@ -163,7 +176,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 
 			newStatus := m.git.GetStatus()
 			m.state.SetGitStatus(newStatus)
-			m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
+			m.fileTree = m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
 		}
 	case "esc":
 		m.committing = false
@@ -171,7 +184,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 
 		newStatus := m.git.GetStatus()
 		m.state.SetGitStatus(newStatus)
-		m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
+		m.fileTree = m.fileTree.UpdateDirectoryTree(newStatus.Directory, m.state.GetSelectedFilepath())
 	case "c":
 		if !m.committing {
 			m.committing = true
@@ -186,8 +199,6 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 
 			m.textInput = ti
 		}
-	default:
-		// log.Println("From update: ", msg.String())
 	}
 
 	return m, nil
