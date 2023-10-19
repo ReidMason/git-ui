@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"git-ui/internal/colours"
 	filetree "git-ui/internal/fileTree"
-	"git-ui/internal/git"
+	"git-ui/internal/state"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -46,7 +47,10 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight - footerHeight
 }
 
-func RenderStatusBar(status git.GitStatus, viewWidth int, commitInput string, committing bool) string {
+func RenderStatusBar(state state.State, commitTextInput textinput.Model) string {
+	status := state.GetGitStatus()
+	viewWidth := state.GetViewWidth()
+
 	ahead := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Green)).Render(fmt.Sprint(status.Ahead))
 	behind := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Red)).Render(fmt.Sprint(status.Behind))
 	output := fmt.Sprintf("%s | %s↑ | %s↓ ", status.Upstream, ahead, behind)
@@ -54,7 +58,8 @@ func RenderStatusBar(status git.GitStatus, viewWidth int, commitInput string, co
 	width := viewWidth - BorderStyle.GetHorizontalBorderSize()
 	output = lipgloss.PlaceHorizontal(width-50, lipgloss.Right, output)
 
-	if !committing {
+	commitInput := commitTextInput.View()
+	if !commitTextInput.Focused() {
 		commitInput = ""
 	}
 	commitInput = lipgloss.NewStyle().Width(50).Render(commitInput)

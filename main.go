@@ -226,7 +226,7 @@ func (m Model) View() string {
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
 
-	statusBar := ui.RenderStatusBar(m.state.GetGitStatus(), width, m.textInput.View(), m.textInput.Focused())
+	statusBar := ui.RenderStatusBar(m.state, m.textInput)
 	display := ui.RenderMainView(width, height, m.fileTree, diffs, statusBar)
 
 	return display
