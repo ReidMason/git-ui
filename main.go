@@ -13,6 +13,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/joho/godotenv"
 )
 
 type Model struct {
@@ -256,7 +257,12 @@ func (m Model) View() string {
 }
 
 func main() {
-	debug := true
+	debug := false
+	err := godotenv.Load()
+	if err == nil {
+		debug = "true" == os.Getenv("DEBUG_GIT_UI")
+	}
+
 	if debug {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
