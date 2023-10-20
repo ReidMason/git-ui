@@ -47,23 +47,30 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight - footerHeight
 }
 
-func RenderStatusBar(state state.State, commitTextInput textinput.Model) string {
+func GetFooterTextContent(state state.State) string {
 	status := state.GetGitStatus()
-	viewWidth := state.GetViewWidth()
 
 	ahead := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Green)).Render(fmt.Sprint(status.Ahead))
 	behind := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Red)).Render(fmt.Sprint(status.Behind))
-	output := fmt.Sprintf("%s | %s | %s ", status.Upstream, ahead, behind)
+	return fmt.Sprintf(" %s | %s | %s | %s ", status.Head, status.Upstream, ahead, behind)
+}
 
-	width := viewWidth - BorderStyle.GetHorizontalBorderSize()
-	output = lipgloss.PlaceHorizontal(width-50, lipgloss.Right, output)
+func RenderStatusBar(state state.State, commitTextInput textinput.Model) string {
+	width := state.GetViewWidth() - BorderStyle.GetHorizontalBorderSize()
+
+	output := GetFooterTextContent(state)
+	outputLength := lipgloss.Width(output)
 
 	commitInput := commitTextInput.View()
 	if !commitTextInput.Focused() {
 		commitInput = ""
 	}
-	commitInput = lipgloss.NewStyle().Width(50).Render(commitInput)
-	commitInput = lipgloss.NewStyle().MaxWidth(50).Render(commitInput)
+
+	commitInput = lipgloss.NewStyle().MaxWidth(width - outputLength).Render(commitInput)
+	commitInput = lipgloss.NewStyle().Width(width - outputLength).Render(commitInput)
+
+	commitInputLength := lipgloss.Width(commitInput)
+	output = lipgloss.PlaceHorizontal(width-commitInputLength, lipgloss.Right, output)
 	output = lipgloss.JoinHorizontal(0, commitInput, output)
 
 	output = lipgloss.NewStyle().MaxWidth(width).Render(output)

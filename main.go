@@ -160,7 +160,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleWindowSizeMsg(msg tea.WindowSizeMsg) (Model, tea.Cmd) {
-	m.state.SetViewWidth(msg.Width)
+	m.state = m.state.SetViewWidth(msg.Width)
 	m.state.SetViewHeight(msg.Height)
 
 	if !m.ready {
@@ -217,8 +217,10 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 			ti.Focus()
 			ti.CharLimit = 156
 
-			// This needs to be three less than it's actual width to account for the extra characters
-			ti.Width = 47 //m.state.GetViewWidth() - 10
+			statusbarText := ui.GetFooterTextContent(m.state)
+			outputLength := lipgloss.Width(statusbarText)
+			rightPadding := 6
+			ti.Width = m.state.GetViewWidth() - outputLength - rightPadding
 
 			m.textInput = ti
 		}
