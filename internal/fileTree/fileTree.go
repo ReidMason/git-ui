@@ -74,13 +74,11 @@ type FileTree struct {
 	root          Directory
 	cursorIndex   int
 	width         int
-	isFocused     bool
+	focused       bool
 }
 
 func New(directory FileTreeItem) FileTree {
-	fileTree := FileTree{
-		isFocused: true,
-	}
+	fileTree := FileTree{}
 
 	return fileTree.UpdateDirectoryTree(directory, "")
 }
@@ -92,7 +90,7 @@ func (ft FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath 
 }
 
 func (ft FileTree) Update(msg tea.Msg, spaceCmd, fileTreeChangeCmd tea.Cmd) (FileTree, tea.Cmd) {
-	if !ft.isFocused {
+	if !ft.focused {
 		return ft, nil
 	}
 
@@ -330,7 +328,11 @@ func (ft FileTree) buildFileTreeString() []string {
 }
 
 func (ft *FileTree) SetFocused(focused bool) {
-	ft.isFocused = focused
+	ft.focused = focused
+}
+
+func (ft FileTree) Focused() bool {
+	return ft.focused
 }
 
 func getSelectedStyle(line string, width int) string {

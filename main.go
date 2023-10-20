@@ -193,17 +193,19 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 					oldFilepath:  m.state.SelectedFilepath(),
 				}
 			}
-		} else if !m.state.DiffsFocused() {
+		} else if m.fileTree.Focused() {
 			selectedItem, err := m.fileTree.GetSelectedItem()
 			if err != nil {
 				return m, nil
 			}
 			if !selectedItem.GetItem().IsDirectory() {
+				m.fileTree.SetFocused(false)
 				m.state = m.state.SetDiffsFocused(true)
 			}
 		}
 	case "esc":
 		if m.state.DiffsFocused() {
+			m.fileTree.SetFocused(true)
 			m.state = m.state.SetDiffsFocused(false)
 		} else {
 			m.textInput.Blur()

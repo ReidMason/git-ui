@@ -32,7 +32,7 @@ func RenderHeader(header string, viewWidth int) string {
 	return headerStyling.Render(header)
 }
 
-func RenderFileTree(filetree filetree.FileTree, state state.State, width, height int) string {
+func RenderFileTree(filetree filetree.FileTree, width, height int) string {
 	width = width - BorderStyle.GetHorizontalBorderSize()
 	fileTreeString := lipgloss.NewStyle().
 		MaxWidth(width).
@@ -40,7 +40,7 @@ func RenderFileTree(filetree filetree.FileTree, state state.State, width, height
 	fileTreeString = lipgloss.NewStyle().Width(width).Height(height).Render(fileTreeString)
 
 	style := BorderStyle
-	if state.DiffsFocused() {
+	if !filetree.Focused() {
 		style = BorderStyleInactive
 	}
 
@@ -119,7 +119,7 @@ func RenderMainView(fileTree filetree.FileTree, diffs string, statusbar string, 
 	diffWidth *= 2
 
 	leftoverWidth := viewWidth - diffWidth
-	fileTreeString := RenderFileTree(fileTree, state, leftoverWidth, diffHeight)
+	fileTreeString := RenderFileTree(fileTree, leftoverWidth, diffHeight)
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)
 
