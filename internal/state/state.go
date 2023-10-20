@@ -9,6 +9,7 @@ type State struct {
 	gitStatus        git.GitStatus
 	viewWidth        int
 	viewHeight       int
+	diffsFocused     bool
 }
 
 func New() State {
@@ -21,14 +22,20 @@ func (s State) SetGitStatus(gitStatus git.GitStatus) State {
 	return s
 }
 
-func (s State) GetViewWidth() int { return s.viewWidth }
+func (s State) SetDiffsFocused(focused bool) State {
+	s.diffsFocused = focused
+	return s
+}
+func (s State) DiffsFocused(focused bool) State { return s }
+
+func (s State) ViewWidth() int { return s.viewWidth }
 func (s State) SetViewWidth(viewWidth int) State {
 	s.viewWidth = viewWidth
 	return s
 }
 
-func (s State) GetViewHeight() int            { return s.viewHeight }
+func (s State) ViewHeight() int               { return s.viewHeight }
 func (s *State) SetViewHeight(viewHeight int) { s.viewHeight = viewHeight }
 
-func (s State) GetSelectedFilepath() string                  { return s.selectedFilepath }
+func (s State) SelectedFilepath() string                     { return s.selectedFilepath }
 func (s *State) SetSelectedFilepath(selectedFilepath string) { s.selectedFilepath = selectedFilepath }

@@ -56,7 +56,7 @@ func GetFooterTextContent(state state.State) string {
 }
 
 func RenderStatusBar(state state.State, commitTextInput textinput.Model) string {
-	width := state.GetViewWidth() - BorderStyle.GetHorizontalBorderSize()
+	width := state.ViewWidth() - BorderStyle.GetHorizontalBorderSize()
 
 	output := GetFooterTextContent(state)
 	outputLength := lipgloss.Width(output)

@@ -15,18 +15,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// App stores the main app information
-// This includes all components like the file tree and the main app state
-// The components get a pointer to the main app state so they can change it themselves
-// So each component has it's own events and acts as a view but mutates the central state
-//
-// State is ONlY updated through setters
-// Components or other "listeners" can subscribe to updates on the state which they can then act on
-// This is how we will re-draw efficiently
-
-// BUG: If you have a file selected and the filetree refreshes and that item vanishes the selection gets broken
-// Write a test for this
-
 type Model struct {
 	textInput textinput.Model
 	git       git.Git
@@ -199,7 +187,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 				m.git.Commit(commitMessage)
 				return GitStatusUpdate{
 					newGitStatus: m.git.GetStatus(),
-					oldFilepath:  m.state.GetSelectedFilepath(),
+					oldFilepath:  m.state.SelectedFilepath(),
 				}
 			}
 		}
@@ -210,7 +198,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 		return m, func() tea.Msg {
 			return GitStatusUpdate{
 				newGitStatus: m.git.GetStatus(),
-				oldFilepath:  m.state.GetSelectedFilepath(),
+				oldFilepath:  m.state.SelectedFilepath(),
 			}
 		}
 	case "c":
@@ -233,12 +221,12 @@ func (m Model) getTextInputWidth() int {
 	statusbarText := ui.GetFooterTextContent(m.state)
 	outputLength := lipgloss.Width(statusbarText)
 	rightPadding := 6
-	return m.state.GetViewWidth() - outputLength - rightPadding
+	return m.state.ViewWidth() - outputLength - rightPadding
 }
 
 func (m Model) View() string {
-	width := m.state.GetViewWidth()
-	height := m.state.GetViewHeight()
+	width := m.state.ViewWidth()
+	height := m.state.ViewHeight()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
