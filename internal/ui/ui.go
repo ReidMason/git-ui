@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"git-ui/internal/colours"
 	filetree "git-ui/internal/fileTree"
+	"git-ui/internal/git"
 	"git-ui/internal/state"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
@@ -23,7 +25,75 @@ var (
 	HeaderStyle = lipgloss.NewStyle().
 			Align(lipgloss.Center).
 			Inherit(BorderStyle)
+
+	DiffAddition = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(colours.Base)).
+			Background(lipgloss.Color(colours.Green)).
+			Width(800)
+
+	DiffRemoval = DiffAddition.Copy().
+			Background(lipgloss.Color(colours.Red))
+
+	DiffBlank = DiffAddition.Copy().
+			Background(lipgloss.Color(colours.Surface0))
+
+	GutterNumber = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(colours.Surface2))
+
+	LineSymbol = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(colours.Overlay2))
 )
+
+func styleDiffLine(diffLine git.DiffLine) string {
+	lineString := diffLine.Content
+	if diffLine.Type == git.Addition {
+		return DiffAddition.Render(lineString)
+	} else if diffLine.Type == git.Removal {
+		return DiffRemoval.Render(lineString)
+	} else if diffLine.Type == git.Blank {
+		return DiffBlank.Render(lineString)
+	}
+
+	return lineString
+}
+
+func buildLineSymbol(line git.DiffLine) string {
+	lineSymbol := " "
+	if line.Type == git.Addition {
+		lineSymbol = "+"
+	} else if line.Type == git.Removal {
+		lineSymbol = "-"
+	}
+
+	return LineSymbol.Render(lineSymbol)
+}
+
+func DiffToString(difflines []git.DiffLine) string {
+	gutterNumberPadding := 0
+	for _, line := range difflines {
+		if line.Type != git.Blank {
+			gutterNumberPadding++
+		}
+	}
+	gutterNumberPadding = len(fmt.Sprint(gutterNumberPadding))
+
+	content := ""
+	i := 1
+	for _, line := range difflines {
+		gutter := ""
+		if line.Type != git.Blank {
+			gutterNumber := fmt.Sprintf("%*d", gutterNumberPadding, i)
+			gutter += GutterNumber.Render(gutterNumber)
+			i++
+		} else {
+			gutter += strings.Repeat(" ", gutterNumberPadding)
+		}
+
+		content += gutter + buildLineSymbol(line) + GutterNumber.Render("│ ") + styleDiffLine(line) + "\n"
+	}
+
+	return content
+}
 
 func RenderHeader(header string, viewWidth int) string {
 	headerStyling := HeaderStyle.

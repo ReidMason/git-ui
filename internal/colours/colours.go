@@ -11,4 +11,8 @@ const (
 	Overlay0 = "#6c7086"
 	Overlay1 = "#7f849c"
 	Overlay2 = "#9399b2"
+	Surface2 = "#585b70"
+	Surface1 = "#45475a"
+	Surface0 = "#313244"
+	Base     = "#1e1e2e"
 )

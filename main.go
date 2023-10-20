@@ -142,8 +142,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = m.state.SetGitStatus(msg.newGitStatus)
 		m.fileTree = m.fileTree.UpdateDirectoryTree(msg.newGitStatus.Directory, msg.oldFilepath)
 	case DiffUpdate:
-		m.lviewport.SetContent(git.DiffToString(msg.newDiff.Diff1))
-		m.rviewport.SetContent(git.DiffToString(msg.newDiff.Diff2))
+		m.lviewport.SetContent(ui.DiffToString(msg.newDiff.Diff1))
+		m.rviewport.SetContent(ui.DiffToString(msg.newDiff.Diff2))
 		m.lviewport.GotoTop()
 		m.rviewport.GotoTop()
 	}
