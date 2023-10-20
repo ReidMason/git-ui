@@ -178,6 +178,10 @@ func (m Model) handleWindowSizeMsg(msg tea.WindowSizeMsg) (Model, tea.Cmd) {
 		m.rviewport.Height = diffHeight
 	}
 
+	if m.textInput.Focused() {
+		m.textInput.Width = m.getTextInputWidth()
+	}
+
 	return m, nil
 }
 
@@ -217,16 +221,19 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 			ti.Focus()
 			ti.CharLimit = 156
 
-			statusbarText := ui.GetFooterTextContent(m.state)
-			outputLength := lipgloss.Width(statusbarText)
-			rightPadding := 6
-			ti.Width = m.state.GetViewWidth() - outputLength - rightPadding
-
+			ti.Width = m.getTextInputWidth()
 			m.textInput = ti
 		}
 	}
 
 	return m, nil
+}
+
+func (m Model) getTextInputWidth() int {
+	statusbarText := ui.GetFooterTextContent(m.state)
+	outputLength := lipgloss.Width(statusbarText)
+	rightPadding := 6
+	return m.state.GetViewWidth() - outputLength - rightPadding
 }
 
 func (m Model) View() string {
