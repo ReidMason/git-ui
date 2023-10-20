@@ -327,8 +327,12 @@ func (ft FileTree) buildFileTreeString() []string {
 	return output
 }
 
-func (ft *FileTree) SetFocused(focused bool) {
-	ft.focused = focused
+func (ft *FileTree) Blur() {
+	ft.focused = false
+}
+
+func (ft *FileTree) Focus() {
+	ft.focused = true
 }
 
 func (ft FileTree) Focused() bool {

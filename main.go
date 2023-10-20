@@ -33,7 +33,7 @@ func initModel() Model {
 		state: state.New(),
 	}
 
-	model.fileTree.SetFocused(true)
+	model.fileTree.Focus()
 
 	return model
 }
@@ -183,7 +183,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 	case "enter":
 		if m.textInput.Focused() {
 			m.textInput.Blur()
-			m.fileTree.SetFocused(true)
+			m.fileTree.Focus()
 			commitMessage := m.textInput.Value()
 
 			return m, func() tea.Msg {
@@ -199,17 +199,17 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 				return m, nil
 			}
 			if !selectedItem.GetItem().IsDirectory() {
-				m.fileTree.SetFocused(false)
+				m.fileTree.Blur()
 				m.state = m.state.SetDiffsFocused(true)
 			}
 		}
 	case "esc":
 		if m.state.DiffsFocused() {
-			m.fileTree.SetFocused(true)
+			m.fileTree.Focus()
 			m.state = m.state.SetDiffsFocused(false)
 		} else {
 			m.textInput.Blur()
-			m.fileTree.SetFocused(true)
+			m.fileTree.Focus()
 
 			return m, func() tea.Msg {
 				return GitStatusUpdate{
@@ -220,7 +220,9 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 		}
 	case "c":
 		if !m.textInput.Focused() {
-			m.fileTree.SetFocused(false)
+			m.fileTree.Blur()
+			m.state = m.state.SetDiffsFocused(false)
+
 			ti := textinput.New()
 			ti.Placeholder = "Commit message"
 			ti.Focus()
