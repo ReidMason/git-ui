@@ -1,6 +1,7 @@
 package colours
 
 const (
+	Sapphire = "#74c7ec"
 	Blue     = "#89b4fa"
 	Red      = "#f38ba8"
 	Green    = "#a6e3a1"

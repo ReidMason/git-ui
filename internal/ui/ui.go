@@ -16,6 +16,10 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color(colours.Blue))
 
+	BorderStyleInactive = BorderStyle.
+				Copy().
+				BorderForeground(lipgloss.Color(colours.Overlay0))
+
 	HeaderStyle = lipgloss.NewStyle().
 			Align(lipgloss.Center).
 			Inherit(BorderStyle)
@@ -28,13 +32,19 @@ func RenderHeader(header string, viewWidth int) string {
 	return headerStyling.Render(header)
 }
 
-func RenderFileTree(filetree filetree.FileTree, width, height int) string {
+func RenderFileTree(filetree filetree.FileTree, state state.State, width, height int) string {
 	width = width - BorderStyle.GetHorizontalBorderSize()
 	fileTreeString := lipgloss.NewStyle().
 		MaxWidth(width).
 		Render(filetree.Render())
 	fileTreeString = lipgloss.NewStyle().Width(width).Height(height).Render(fileTreeString)
-	return BorderStyle.Render(fileTreeString)
+
+	style := BorderStyle
+	if state.DiffsFocused() {
+		style = BorderStyleInactive
+	}
+
+	return style.Render(fileTreeString)
 }
 
 func getColumnWidth(viewWidth int) int {
@@ -90,7 +100,12 @@ func renderDiffs(diffs string, state state.State) string {
 	diffs = lipgloss.NewStyle().MaxWidth(diffWidth).Render(diffs)
 	diffs = lipgloss.NewStyle().Width(diffWidth).Render(diffs)
 
-	return BorderStyle.Render(diffs)
+	style := BorderStyle
+	if !state.DiffsFocused() {
+		style = BorderStyleInactive
+	}
+
+	return style.Render(diffs)
 }
 
 func RenderMainView(fileTree filetree.FileTree, diffs string, statusbar string, state state.State) string {
@@ -104,7 +119,7 @@ func RenderMainView(fileTree filetree.FileTree, diffs string, statusbar string, 
 	diffWidth *= 2
 
 	leftoverWidth := viewWidth - diffWidth
-	fileTreeString := RenderFileTree(fileTree, leftoverWidth, diffHeight)
+	fileTreeString := RenderFileTree(fileTree, state, leftoverWidth, diffHeight)
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)
 
