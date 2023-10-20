@@ -115,13 +115,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	)
 
 	if !m.state.DiffsFocused() {
-		currFilepath := m.fileTree.GetSelectedFilepath()
-		m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(currFilepath))
+		m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(""))
 		cmds = append(cmds, cmd)
 	}
 
 	if m.textInput.Focused() {
 		m.textInput, _ = m.textInput.Update(msg)
+	}
+
+	if m.state.DiffsFocused() {
+		m.lviewport, cmd = m.lviewport.Update(msg)
+		cmds = append(cmds, cmd)
+		m.rviewport, cmd = m.rviewport.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
 	switch msg := msg.(type) {
@@ -139,13 +145,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.rviewport.SetContent(git.DiffToString(msg.newDiff.Diff2))
 		m.lviewport.GotoTop()
 		m.rviewport.GotoTop()
-	}
-
-	if m.state.DiffsFocused() {
-		m.lviewport, cmd = m.lviewport.Update(msg)
-		cmds = append(cmds, cmd)
-		m.rviewport, cmd = m.rviewport.Update(msg)
-		cmds = append(cmds, cmd)
 	}
 
 	return m, tea.Batch(cmds...)
@@ -249,6 +248,7 @@ func (m Model) View() string {
 	display := ui.RenderMainView(m.fileTree, diffs, statusBar, m.state)
 
 	return display
+
 }
 
 func main() {
