@@ -114,9 +114,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds []tea.Cmd
 	)
 
-	currFilepath := m.fileTree.GetSelectedFilepath()
-	m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(currFilepath))
-	cmds = append(cmds, cmd)
+	if !m.state.DiffsFocused() {
+		currFilepath := m.fileTree.GetSelectedFilepath()
+		m.fileTree, cmd = m.fileTree.Update(msg, m.toggleStageFile(), m.handleFileTreeChange(currFilepath))
+		cmds = append(cmds, cmd)
+	}
 
 	if m.textInput.Focused() {
 		m.textInput, _ = m.textInput.Update(msg)
@@ -139,10 +141,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.rviewport.GotoTop()
 	}
 
-	// m.lviewport, cmd = m.lviewport.Update(msg)
-	// cmds = append(cmds, cmd)
-	// m.rviewport, cmd = m.rviewport.Update(msg)
-	// cmds = append(cmds, cmd)
+	if m.state.DiffsFocused() {
+		m.lviewport, cmd = m.lviewport.Update(msg)
+		cmds = append(cmds, cmd)
+		m.rviewport, cmd = m.rviewport.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 
 	return m, tea.Batch(cmds...)
 }
@@ -190,15 +194,27 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 					oldFilepath:  m.state.SelectedFilepath(),
 				}
 			}
+		} else if !m.state.DiffsFocused() {
+			selectedItem, err := m.fileTree.GetSelectedItem()
+			if err != nil {
+				return m, nil
+			}
+			if !selectedItem.GetItem().IsDirectory() {
+				m.state = m.state.SetDiffsFocused(true)
+			}
 		}
 	case "esc":
-		m.textInput.Blur()
-		m.fileTree.SetFocused(true)
+		if m.state.DiffsFocused() {
+			m.state = m.state.SetDiffsFocused(false)
+		} else {
+			m.textInput.Blur()
+			m.fileTree.SetFocused(true)
 
-		return m, func() tea.Msg {
-			return GitStatusUpdate{
-				newGitStatus: m.git.GetStatus(),
-				oldFilepath:  m.state.SelectedFilepath(),
+			return m, func() tea.Msg {
+				return GitStatusUpdate{
+					newGitStatus: m.git.GetStatus(),
+					oldFilepath:  m.state.SelectedFilepath(),
+				}
 			}
 		}
 	case "c":

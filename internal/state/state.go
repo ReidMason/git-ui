@@ -26,7 +26,7 @@ func (s State) SetDiffsFocused(focused bool) State {
 	s.diffsFocused = focused
 	return s
 }
-func (s State) DiffsFocused(focused bool) State { return s }
+func (s State) DiffsFocused() bool { return s.diffsFocused }
 
 func (s State) ViewWidth() int { return s.viewWidth }
 func (s State) SetViewWidth(viewWidth int) State {
