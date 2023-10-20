@@ -53,7 +53,7 @@ func RenderStatusBar(state state.State, commitTextInput textinput.Model) string 
 
 	ahead := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Green)).Render(fmt.Sprint(status.Ahead))
 	behind := lipgloss.NewStyle().Foreground(lipgloss.Color(colours.Red)).Render(fmt.Sprint(status.Behind))
-	output := fmt.Sprintf("%s | %s↑ | %s↓ ", status.Upstream, ahead, behind)
+	output := fmt.Sprintf("%s | %s | %s ", status.Upstream, ahead, behind)
 
 	width := viewWidth - BorderStyle.GetHorizontalBorderSize()
 	output = lipgloss.PlaceHorizontal(width-50, lipgloss.Right, output)
