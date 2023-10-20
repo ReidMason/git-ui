@@ -79,20 +79,31 @@ func RenderStatusBar(state state.State, commitTextInput textinput.Model) string 
 	return output
 }
 
-func RenderMainView(viewWidth, viewHeight int, fileTree filetree.FileTree, diffs string, statusbar string) string {
-	header := RenderHeader("Git-UI", viewWidth)
+func renderDiffs(diffs string, state state.State) string {
+	viewWidth := state.ViewWidth()
+	viewHeight := state.ViewHeight()
 
-	diffWidth, diffHeight := GetDiffDimensions(viewWidth, viewHeight)
+	diffWidth, _ := GetDiffDimensions(viewWidth, viewHeight)
 	diffWidth *= 2
-	usedWidth := diffWidth
 
 	diffWidth -= BorderStyle.GetHorizontalBorderSize()
 	diffs = lipgloss.NewStyle().MaxWidth(diffWidth).Render(diffs)
 	diffs = lipgloss.NewStyle().Width(diffWidth).Render(diffs)
 
-	diffs = BorderStyle.Render(diffs)
+	return BorderStyle.Render(diffs)
+}
 
-	leftoverWidth := viewWidth - usedWidth
+func RenderMainView(fileTree filetree.FileTree, diffs string, statusbar string, state state.State) string {
+	viewWidth := state.ViewWidth()
+	viewHeight := state.ViewHeight()
+
+	header := RenderHeader("Git-UI", viewWidth)
+
+	diffs = renderDiffs(diffs, state)
+	diffWidth, diffHeight := GetDiffDimensions(viewWidth, viewHeight)
+	diffWidth *= 2
+
+	leftoverWidth := viewWidth - diffWidth
 	fileTreeString := RenderFileTree(fileTree, leftoverWidth, diffHeight)
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)

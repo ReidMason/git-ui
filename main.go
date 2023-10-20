@@ -241,14 +241,12 @@ func (m Model) getTextInputWidth() int {
 }
 
 func (m Model) View() string {
-	width := m.state.ViewWidth()
-	height := m.state.ViewHeight()
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
 
 	statusBar := ui.RenderStatusBar(m.state, m.textInput)
-	display := ui.RenderMainView(width, height, m.fileTree, diffs, statusBar)
+	display := ui.RenderMainView(m.fileTree, diffs, statusBar, m.state)
 
 	return display
 }
