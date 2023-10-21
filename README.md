@@ -13,6 +13,8 @@ A terminal based git interface
 - [ ] Add theme support
 - [ ] Move all items into state so ui package can handle all rendering
 - [ ] Add a 'state machine' to handle focus switching
+- [ ] If file is untracked have it display diff (comare to dev/null)
+- [ ] If a file is staged show diff still
 
 # Icons
 
