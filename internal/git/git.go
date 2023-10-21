@@ -110,11 +110,9 @@ func (g Git) GetStatus() GitStatus {
 		//   else if changeType == copied {
 		//
 		// } else if changeType == unmerged {
-		//
-		// } else if changeType == untracked {
-		//
-		// }
 	}
+
+	gitStatus.Directory.Sort()
 
 	return gitStatus
 }

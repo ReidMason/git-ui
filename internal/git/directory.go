@@ -3,6 +3,7 @@ package git
 import (
 	"git-ui/internal/colours"
 	filetree "git-ui/internal/fileTree"
+	"sort"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -63,6 +64,16 @@ func (d Directory) GetDisplay() string {
 	}
 
 	return styling.Foreground(lipgloss.Color(colours.Red)).Render(text)
+}
+
+func (d *Directory) Sort() {
+	sort.Slice(d.Files, func(i, j int) bool {
+		return d.Files[i].Name < d.Files[j].Name
+	})
+
+	for _, subDirectory := range d.Directories {
+		subDirectory.Sort()
+	}
 }
 
 func (d Directory) GetStagedStatus() StagedStatus {

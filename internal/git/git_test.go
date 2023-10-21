@@ -210,15 +210,6 @@ func TestGetStatus(t *testing.T) {
 				}
 				directory.Directories = append(directory.Directories, &internalDir)
 
-				file := File{
-					Name:           "main.go",
-					Dirpath:        "Directory/Internal",
-					Parent:         &internalDir,
-					IndexStatus:    '.',
-					WorktreeStatus: '.',
-				}
-				internalDir.Files = append(internalDir.Files, file)
-
 				lib := File{
 					Name:           "lib.go",
 					Dirpath:        "Directory/Internal",
@@ -227,6 +218,15 @@ func TestGetStatus(t *testing.T) {
 					WorktreeStatus: 'M',
 				}
 				internalDir.Files = append(internalDir.Files, lib)
+
+				file := File{
+					Name:           "main.go",
+					Dirpath:        "Directory/Internal",
+					Parent:         &internalDir,
+					IndexStatus:    '.',
+					WorktreeStatus: '.',
+				}
+				internalDir.Files = append(internalDir.Files, file)
 
 				return GitStatus{
 					Head:      "main",
@@ -263,9 +263,57 @@ func TestGetStatus(t *testing.T) {
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    '.',
-					WorktreeStatus: '.',
+					WorktreeStatus: 'U',
 				}
 				rootDir.Files = append(rootDir.Files, file)
+
+				return GitStatus{
+					Directory: &rootDir,
+					Head:      "testing",
+					Upstream:  " ",
+				}
+			}(),
+		},
+		{
+			name: "Status file ordering",
+			rawStatus: `# branch.oid 74700949a5ce67be9cb5ee97434df52846caec01
+# branch.head testing
+1 .M N... 100644 100644 100644 86d0e0f7fd4ff24b7d065dd6346e1e38c7f07b87 86d0e0f7fd4ff24b7d065dd6346e1e38c7f07b87 readme.md
+? git-ui
+? trackme.md`,
+			expected: func() GitStatus {
+				rootDir := Directory{
+					Name:   "Root",
+					Parent: nil,
+					Files:  []File{},
+				}
+
+				gitUiFile := File{
+					Name:           "git-ui",
+					Dirpath:        ".",
+					Parent:         &rootDir,
+					IndexStatus:    '.',
+					WorktreeStatus: 'U',
+				}
+				rootDir.Files = append(rootDir.Files, gitUiFile)
+
+				readmeFile := File{
+					Name:           "readme.md",
+					Dirpath:        ".",
+					Parent:         &rootDir,
+					IndexStatus:    '.',
+					WorktreeStatus: 'M',
+				}
+				rootDir.Files = append(rootDir.Files, readmeFile)
+
+				trackmeFile := File{
+					Name:           "trackme.md",
+					Dirpath:        ".",
+					Parent:         &rootDir,
+					IndexStatus:    '.',
+					WorktreeStatus: 'U',
+				}
+				rootDir.Files = append(rootDir.Files, trackmeFile)
 
 				return GitStatus{
 					Directory: &rootDir,
@@ -349,6 +397,6 @@ func checkFile(file, expectedFile File, t *testing.T) {
 	}
 
 	if file.WorktreeStatus != expectedFile.WorktreeStatus {
-		t.Fatalf("Wrong work tree status for file '%s'. Expected: '%d' Got: '%d'", file.Name, expectedFile.WorktreeStatus, file.WorktreeStatus)
+		t.Fatalf("Wrong work tree status for file '%s'. Expected: '%s' Got: '%s'", file.Name, string(expectedFile.WorktreeStatus), string(file.WorktreeStatus))
 	}
 }
