@@ -8,6 +8,7 @@ import (
 	"git-ui/internal/state"
 	"git-ui/internal/ui"
 	"os"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -247,7 +248,10 @@ func (m Model) getTextInputWidth() int {
 func (m Model) View() string {
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
-	diffs := lipgloss.JoinHorizontal(0, leftDiff, rightDiff)
+	divider := strings.Repeat("│\n", lipgloss.Height(leftDiff))
+	diffsStyle := ui.GetDiffsDividerStyle(m.state)
+	divider = diffsStyle.Render(strings.TrimSuffix(divider, "\n"))
+	diffs := lipgloss.JoinHorizontal(0, leftDiff, divider, rightDiff)
 
 	statusBar := ui.RenderStatusBar(m.state, m.textInput)
 	display := ui.RenderMainView(m.fileTree, diffs, statusBar, m.state)

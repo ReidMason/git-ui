@@ -159,6 +159,27 @@ func RenderStatusBar(state state.State, commitTextInput textinput.Model) string 
 	return output
 }
 
+func getDiffsBorderStyle(state state.State) lipgloss.Style {
+	if state.DiffsFocused() {
+		return BorderStyle
+	}
+
+	return BorderStyleInactive
+}
+
+func GetDiffsDividerStyle(state state.State) lipgloss.Style {
+	if state.DiffsFocused() {
+		return lipgloss.
+			NewStyle().
+			Foreground(lipgloss.Color(colours.Blue))
+
+	}
+
+	return lipgloss.
+		NewStyle().
+		Foreground(lipgloss.Color(colours.Overlay0))
+}
+
 func renderDiffs(diffs string, state state.State) string {
 	viewWidth := state.ViewWidth()
 	viewHeight := state.ViewHeight()
@@ -170,10 +191,7 @@ func renderDiffs(diffs string, state state.State) string {
 	diffs = lipgloss.NewStyle().MaxWidth(diffWidth).Render(diffs)
 	diffs = lipgloss.NewStyle().Width(diffWidth).Render(diffs)
 
-	style := BorderStyle
-	if !state.DiffsFocused() {
-		style = BorderStyleInactive
-	}
+	style := getDiffsBorderStyle(state)
 
 	return style.Render(diffs)
 }
