@@ -28,7 +28,7 @@ type File struct {
 
 func (f File) GetDisplay() string {
 	indexStatus := string(f.IndexStatus)
-	if f.IndexStatus == 'M' {
+	if f.IndexStatus != '.' {
 		indexStatus = StagedStyle.Render(indexStatus)
 	} else {
 		indexStatus = UnstagedStyle.Render(indexStatus)

@@ -90,9 +90,9 @@ func (g Git) GetStatus() GitStatus {
 	}
 
 	for _, line := range lines {
-		trimmedLine := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmedLine, "#") {
-			gitStatus = addStatusMetadata(trimmedLine, gitStatus)
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "#") {
+			gitStatus = addStatusMetadata(line, gitStatus)
 			continue
 		}
 
@@ -102,6 +102,9 @@ func (g Git) GetStatus() GitStatus {
 
 		if changeType == changed {
 			file := parseChangedStatusLine(lineString)
+			addFile(gitStatus.Directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
+		} else if changeType == untracked {
+			file := parseUntrackedStatusLine(lineString)
 			addFile(gitStatus.Directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
 		}
 		//   else if changeType == copied {
@@ -122,6 +125,11 @@ func parseChangedStatusLine(line string) File {
 	statusIndicators := []rune(sections[0])
 
 	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
+}
+
+func parseUntrackedStatusLine(line string) File {
+	filepath := strings.TrimPrefix(line, "? ")
+	return newFile(filepath, '.', 'U')
 }
 
 func (g Git) Stage(filepath string)       { g.commandRunner.Stage(filepath) }

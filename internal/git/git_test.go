@@ -246,6 +246,34 @@ func TestGetStatus(t *testing.T) {
 				}
 			}(),
 		},
+		{
+			name: "Status without upstream",
+			rawStatus: `# branch.oid 74700949a5ce67be9cb5ee97434df52846caec01
+		# branch.head testing
+    ? git-ui`,
+			expected: func() GitStatus {
+				rootDir := Directory{
+					Name:   "Root",
+					Parent: nil,
+					Files:  []File{},
+				}
+
+				file := File{
+					Name:           "git-ui",
+					Dirpath:        ".",
+					Parent:         &rootDir,
+					IndexStatus:    '.',
+					WorktreeStatus: '.',
+				}
+				rootDir.Files = append(rootDir.Files, file)
+
+				return GitStatus{
+					Directory: &rootDir,
+					Head:      "testing",
+					Upstream:  " ",
+				}
+			}(),
+		},
 	}
 
 	t.Parallel()
