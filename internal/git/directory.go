@@ -77,32 +77,39 @@ func (d *Directory) Sort() {
 }
 
 func (d Directory) GetStagedStatus() StagedStatus {
+	hasStaged := false
+	hasUnstaged := false
+
 	for _, subDirectory := range d.Directories {
 		subDirectoryStatus := subDirectory.GetStagedStatus()
-		if subDirectoryStatus != FullyStaged {
-			return subDirectoryStatus
+		if subDirectoryStatus == PartiallyStaged {
+			return PartiallyStaged
 		}
-	}
 
-	if len(d.Files) == 0 {
-		return FullyStaged
-	}
-
-	hasStagedFile := false
-	hasUnstagedFile := false
-	for _, file := range d.Files {
-		if file.IsStaged() {
-			hasStagedFile = true
+		if subDirectoryStatus == FullyStaged {
+			hasStaged = true
 		} else {
-			hasUnstagedFile = true
+			hasUnstaged = true
 		}
 
-		if hasStagedFile && hasUnstagedFile {
+		if hasStaged && hasUnstaged {
 			return PartiallyStaged
 		}
 	}
 
-	if hasStagedFile && !hasUnstagedFile {
+	for _, file := range d.Files {
+		if file.IsStaged() {
+			hasStaged = true
+		} else {
+			hasUnstaged = true
+		}
+
+		if hasStaged && hasUnstaged {
+			return PartiallyStaged
+		}
+	}
+
+	if hasStaged && !hasUnstaged {
 		return FullyStaged
 	}
 
