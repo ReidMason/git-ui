@@ -30,9 +30,14 @@ type Model struct {
 func initModel() Model {
 	gitCommands := gitcommands.New()
 
+	ti := textinput.New()
+	ti.Placeholder = "Commit message"
+	ti.CharLimit = 156
+
 	model := Model{
-		git:   git.New(gitCommands),
-		state: state.New(),
+		git:       git.New(gitCommands),
+		state:     state.New(),
+		textInput: ti,
 	}
 
 	model.fileTree.Focus()
@@ -187,6 +192,7 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 			m.textInput.Blur()
 			m.fileTree.Focus()
 			commitMessage := m.textInput.Value()
+			m.textInput.SetValue("")
 
 			return m, func() tea.Msg {
 				m.git.Commit(commitMessage)
@@ -223,15 +229,9 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 	case "c":
 		if !m.textInput.Focused() {
 			m.fileTree.Blur()
+			m.textInput.Focus()
 			m.state = m.state.SetDiffsFocused(false)
-
-			ti := textinput.New()
-			ti.Placeholder = "Commit message"
-			ti.Focus()
-			ti.CharLimit = 156
-
-			ti.Width = m.getTextInputWidth()
-			m.textInput = ti
+			m.textInput.Width = m.getTextInputWidth()
 		}
 	}
 
