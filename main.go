@@ -187,6 +187,21 @@ func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
 		return m, tea.Quit
+	case "a":
+		if m.fileTree.Focused() {
+			return m, func() tea.Msg {
+				if m.state.GetGitStatus().Directory.GetStagedStatus() == git.FullyStaged {
+					m.git.Unstage(".")
+				} else {
+					m.git.Stage(".")
+				}
+
+				return GitStatusUpdate{
+					newGitStatus: m.git.GetStatus(),
+					oldFilepath:  m.state.SelectedFilepath(),
+				}
+			}
+		}
 	case "enter":
 		if m.textInput.Focused() {
 			m.textInput.Blur()
