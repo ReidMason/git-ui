@@ -4,7 +4,7 @@ A terminal based git interface
 
 # Todo
 
-- [ ] Diff colouring/styling
+- [x] Diff colouring/styling
 - [x] Make use of `CMD`s in BubbleTea
 - [ ] Allow the staging of hunks or line by line
 - [ ] Add pushing to git
