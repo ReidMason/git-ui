@@ -13,3 +13,7 @@ A terminal based git interface
 - [ ] Add theme support
 - [ ] Move all items into state so ui package can handle all rendering
 - [ ] Add a 'state machine' to handle focus switching
+
+# Icons
+
+Icons are using [nerdfont](https://www.nerdfonts.com/cheat-sheet).
