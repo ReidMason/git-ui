@@ -173,7 +173,11 @@ func TestGetStatus(t *testing.T) {
 				}
 				rootDir.Files = append(rootDir.Files, file)
 
-				return GitStatus{Directory: &rootDir}
+				return GitStatus{
+					Head:      "main",
+					Upstream:  "origin/main",
+					Directory: &rootDir,
+				}
 			}(),
 		},
 		{
@@ -224,7 +228,11 @@ func TestGetStatus(t *testing.T) {
 				}
 				internalDir.Files = append(internalDir.Files, lib)
 
-				return GitStatus{Directory: &rootDir}
+				return GitStatus{
+					Head:      "main",
+					Upstream:  "origin/main",
+					Directory: &rootDir,
+				}
 			}(),
 		},
 		{
@@ -233,7 +241,8 @@ func TestGetStatus(t *testing.T) {
 		# branch.head testing`,
 			expected: func() GitStatus {
 				return GitStatus{Directory: nil,
-					Head: "testing",
+					Head:     "testing",
+					Upstream: " ",
 				}
 			}(),
 		},
@@ -245,6 +254,14 @@ func TestGetStatus(t *testing.T) {
 		git := New(commandRunner)
 
 		result := git.GetStatus()
+
+		if result.Head != tc.expected.Head {
+			t.Fatalf("Wrong head. Expected '%s' Got: '%s'", tc.expected.Head, result.Head)
+		}
+
+		if result.Upstream != tc.expected.Upstream {
+			t.Fatalf("Wrong upstream. Expected '%s' Got: '%s'", tc.expected.Upstream, result.Upstream)
+		}
 
 		checkDir(result.Directory, tc.expected.Directory, t)
 	}

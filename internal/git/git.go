@@ -38,12 +38,7 @@ type GitStatus struct {
 }
 
 func parseHead(line string) string {
-	elements := strings.Split(line, " ")
-	if len(elements) < 3 {
-		return "Unknown"
-	}
-
-	return elements[2]
+	return strings.TrimPrefix(line, "# branch.head ")
 }
 
 func parseAheadAndBehind(line string) (int, int) {
@@ -91,11 +86,13 @@ func (g Git) GetStatus() GitStatus {
 
 	gitStatus := GitStatus{
 		Directory: newDirectory("Root", ".", nil),
+		Upstream:  " ",
 	}
 
 	for _, line := range lines {
-		if strings.HasPrefix(line, "#") {
-			gitStatus = addStatusMetadata(line, gitStatus)
+		trimmedLine := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmedLine, "#") {
+			gitStatus = addStatusMetadata(trimmedLine, gitStatus)
 			continue
 		}
 
