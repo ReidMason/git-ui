@@ -227,6 +227,16 @@ func TestGetStatus(t *testing.T) {
 				return GitStatus{Directory: &rootDir}
 			}(),
 		},
+		{
+			name: "Status without upstream",
+			rawStatus: `# branch.oid 74700949a5ce67be9cb5ee97434df52846caec01
+		# branch.head testing`,
+			expected: func() GitStatus {
+				return GitStatus{Directory: nil,
+					Head: "testing",
+				}
+			}(),
+		},
 	}
 
 	t.Parallel()
@@ -236,11 +246,15 @@ func TestGetStatus(t *testing.T) {
 
 		result := git.GetStatus()
 
-		checkDir(*result.Directory, *tc.expected.Directory, t)
+		checkDir(result.Directory, tc.expected.Directory, t)
 	}
 }
 
-func checkDir(directory, expectedDirectory Directory, t *testing.T) {
+func checkDir(directory, expectedDirectory *Directory, t *testing.T) {
+	if expectedDirectory == nil {
+		return
+	}
+
 	if directory.Name != expectedDirectory.Name {
 		t.Fatalf("Wrong name name for directory. Expected: '%s' Got: '%s'", expectedDirectory.Name, directory.Name)
 	}
@@ -268,7 +282,7 @@ func checkDir(directory, expectedDirectory Directory, t *testing.T) {
 
 	for i, expectedSubDirectory := range expectedDirectory.Directories {
 		subDirectory := directory.Directories[i]
-		checkDir(*subDirectory, *expectedSubDirectory, t)
+		checkDir(subDirectory, expectedSubDirectory, t)
 	}
 }
 

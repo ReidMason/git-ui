@@ -257,7 +257,6 @@ func (m Model) View() string {
 	display := ui.RenderMainView(m.fileTree, diffs, statusBar, m.state)
 
 	return display
-
 }
 
 func main() {

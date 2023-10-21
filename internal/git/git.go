@@ -66,18 +66,39 @@ func parseUpstream(line string) string {
 	return strings.TrimPrefix(line, "# branch.upstream ")
 }
 
+func addStatusMetadata(line string, gitStatus GitStatus) GitStatus {
+	if strings.HasPrefix(line, "# branch.head") {
+		gitStatus.Head = parseHead(line)
+		return gitStatus
+	}
+
+	if strings.HasPrefix(line, "# branch.upstream") {
+		gitStatus.Upstream = parseUpstream(line)
+		return gitStatus
+	}
+
+	if strings.HasPrefix(line, "# branch.ab") {
+		gitStatus.Ahead, gitStatus.Behind = parseAheadAndBehind(line)
+		return gitStatus
+	}
+
+	return gitStatus
+}
+
 func (g Git) GetStatus() GitStatus {
 	rawStatus := g.commandRunner.GetStatus()
 	lines := strings.Split(rawStatus, "\n")
 
 	gitStatus := GitStatus{
-		Head:      parseHead(lines[1]),
-		Upstream:  parseUpstream(lines[2]),
 		Directory: newDirectory("Root", ".", nil),
 	}
-	gitStatus.Ahead, gitStatus.Behind = parseAheadAndBehind(lines[3])
 
-	for _, line := range lines[4:] {
+	for _, line := range lines {
+		if strings.HasPrefix(line, "#") {
+			gitStatus = addStatusMetadata(line, gitStatus)
+			continue
+		}
+
 		firstRune, lineString := utils.TrimFirstRune(line)
 		lineString = strings.TrimSpace(lineString)
 		changeType := StatusChangeType(firstRune)
