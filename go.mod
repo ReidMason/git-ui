@@ -28,3 +28,5 @@ require (
 	golang.org/x/term v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 )
+
+replace git-ui v0.0.0-20231028140052-c9238ccd851f => github.com/ReidMason/git-ui v0.0.0-20231028140052-c9238ccd851f
