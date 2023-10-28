@@ -122,9 +122,10 @@ func getColumnWidth(viewWidth int) int {
 }
 
 func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
-	headerHeight := 5
 	footerHeight := 3
-	return getColumnWidth(viewWidth) * 5, viewHeight - headerHeight - footerHeight
+	verticalBorderSize := BorderStyle.GetVerticalBorderSize()
+	diffHeight := viewHeight - verticalBorderSize - footerHeight
+	return getColumnWidth(viewWidth) * 5, diffHeight
 }
 
 func GetFooterTextContent(state state.State) string {
@@ -200,8 +201,6 @@ func RenderMainView(fileTree filetree.FileTree, diffs string, statusbar string, 
 	viewWidth := state.ViewWidth()
 	viewHeight := state.ViewHeight()
 
-	header := RenderHeader("Git-UI", viewWidth)
-
 	diffs = renderDiffs(diffs, state)
 	diffWidth, diffHeight := GetDiffDimensions(viewWidth, viewHeight)
 	diffWidth *= 2
@@ -211,5 +210,5 @@ func RenderMainView(fileTree filetree.FileTree, diffs string, statusbar string, 
 
 	mainBody := lipgloss.JoinHorizontal(0, fileTreeString, diffs)
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, mainBody, statusbar)
+	return lipgloss.JoinVertical(lipgloss.Left, mainBody, statusbar)
 }
