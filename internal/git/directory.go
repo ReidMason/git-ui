@@ -120,3 +120,14 @@ func (d Directory) GetStagedStatus() StagedStatus {
 func (d Directory) IsDirectory() bool { return true }
 
 func (d Directory) GetFilePath() string { return d.Filepath }
+func (d Directory) GetFirstFilePath() string {
+	if len(d.Directories) > 0 {
+		return d.Directories[0].Filepath
+	}
+
+	if len(d.Files) > 0 {
+		return d.Files[0].GetFilePath()
+	}
+
+	return ""
+}

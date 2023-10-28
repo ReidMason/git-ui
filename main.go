@@ -58,7 +58,7 @@ func (m Model) Init() tea.Cmd {
 
 	firstFilepath := ""
 	if gitStatus.Directory != nil {
-		firstFilepath = gitStatus.Directory.Filepath
+		firstFilepath = gitStatus.Directory.GetFirstFilePath()
 	}
 
 	cmds = append(cmds, m.handleFileTreeChange(firstFilepath))
