@@ -23,9 +23,5 @@ func RunCommand(command string, args ...string) (string, error) {
 	cmd.Stdout = &out
 	err := cmd.Run()
 
-	if err != nil {
-		return stdErr.String(), err
-	}
-
-	return strings.ReplaceAll(out.String(), "\t", "   "), nil
+	return strings.ReplaceAll(strings.TrimSpace(out.String()), "\t", "   "), err
 }

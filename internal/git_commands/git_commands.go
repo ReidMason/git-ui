@@ -49,11 +49,20 @@ func (g GitCommandLine) Commit(commitMessage string) {
 }
 
 func (g GitCommandLine) GetDiff(filepath string) string {
-	// If it's new we want to add /dev/null instead
 	result, err := runGitCommand("diff", "--no-ext-diff", "-U1000", "--", filepath)
 
+	// If we got a blank result the file might be staged so we use cached
+	if err == nil && result == "" {
+		result, err = runGitCommand("diff", "--no-ext-diff", "--cached", "-U1000", "--", filepath)
+	}
+
+	// If we got a blank result the file probably isn't indexed so compare it to /dev/null
+	if err == nil && result == "" {
+		result, err = runGitCommand("diff", "--no-ext-diff", "-U1000", "--", "/dev/null", filepath)
+	}
+
 	if err != nil {
-		return ""
+		return result
 	}
 
 	return result

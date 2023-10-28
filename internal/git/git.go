@@ -175,11 +175,19 @@ func (g Git) GetDiff(filepath string) Diff {
 		return diff
 	}
 
-	lines := strings.Split(diffString, "\n")[5:]
+	lines := strings.Split(diffString, "\n")
 
+	start := false
 	changes := 0
 	blankDiffLine := newDiffLine("", Blank)
 	for _, line := range lines {
+		if !start && !strings.HasPrefix(line, "@@") {
+			continue
+		} else if strings.HasPrefix(line, "@@") {
+			start = true
+			continue
+		}
+
 		indicator, lineString := utils.TrimFirstRune(line)
 		if indicator == '-' {
 			diffLine := newDiffLine(lineString, Removal)
