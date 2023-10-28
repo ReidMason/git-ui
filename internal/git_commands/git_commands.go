@@ -46,12 +46,8 @@ func (g GitCommandLine) Commit(commitMessage string) {
 }
 
 func (g GitCommandLine) GetDiff(filepath string) string {
-	args := []string{"diff", "--no-ext-diff", "-U1000", "--"}
 	// If it's new we want to add /dev/null instead
-
-	args = append(args, filepath)
-
-	result, err := utils.RunCommand("git", args...)
+	result, err := runGitCommand("diff", "--no-ext-diff", "-U1000", "--", filepath)
 
 	if err != nil {
 		return ""
