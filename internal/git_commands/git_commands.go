@@ -60,19 +60,21 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 	return result
 }
 
-func getRootDir() (string, error) {
+func getRootDir() string {
 	rootDir, err := utils.RunCommand("git", "rev-parse", "--show-toplevel")
-	return strings.TrimSpace(rootDir), err
+	if err != nil {
+		return "."
+	}
+
+	return strings.TrimSpace(rootDir)
+}
+
+func runGitCommand(args ...string) (string, error) {
+	rootDirectory := getRootDir()
+	args = append([]string{"-C", rootDirectory}, args...)
+	return utils.RunCommand("git", args...)
 }
 
 func (g GitCommandLine) GetStatus() (string, error) {
-	rootDirectory, err := getRootDir()
-	if err != nil {
-		log.Println("Failed to get rootDirectory")
-		rootDirectory = "."
-	}
-
-	log.Println("git", "-C", rootDirectory, "status", "-u", "--porcelain=v2", "--branch")
-
-	return utils.RunCommand("git", "-C", rootDirectory, "status", "-u", "--porcelain=v2", "--branch")
+	return runGitCommand("status", "-u", "--porcelain=v2", "--branch")
 }
