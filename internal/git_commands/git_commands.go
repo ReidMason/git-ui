@@ -2,9 +2,10 @@ package gitcommands
 
 import (
 	"fmt"
-	"git-ui/internal/utils"
 	"log"
 	"strings"
+
+	"github.com/ReidMason/git-ui/internal/utils"
 )
 
 type GitCommandRunner interface {

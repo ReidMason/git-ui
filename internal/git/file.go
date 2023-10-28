@@ -2,10 +2,11 @@ package git
 
 import (
 	"fmt"
-	filetree "git-ui/internal/fileTree"
-	"git-ui/internal/styling"
 	"path/filepath"
 	"strings"
+
+	filetree "github.com/ReidMason/git-ui/internal/fileTree"
+	"github.com/ReidMason/git-ui/internal/styling"
 
 	"github.com/charmbracelet/lipgloss"
 )

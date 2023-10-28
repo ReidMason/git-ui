@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	filetree "git-ui/internal/fileTree"
-	"git-ui/internal/git"
-	gitcommands "git-ui/internal/git_commands"
-	"git-ui/internal/state"
-	"git-ui/internal/ui"
 	"os"
 	"strings"
+
+	"github.com/ReidMason/git-ui/internal/git"
+	gitcommands "github.com/ReidMason/git-ui/internal/git_commands"
+	"github.com/ReidMason/git-ui/internal/state"
+	"github.com/ReidMason/git-ui/internal/ui"
+
+	filetree "github.com/ReidMason/git-ui/internal/fileTree"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"

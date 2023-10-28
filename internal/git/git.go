@@ -1,10 +1,11 @@
 package git
 
 import (
-	gitcommands "git-ui/internal/git_commands"
-	"git-ui/internal/utils"
 	"strconv"
 	"strings"
+
+	gitcommands "github.com/ReidMason/git-ui/internal/git_commands"
+	"github.com/ReidMason/git-ui/internal/utils"
 )
 
 type GitInterface interface {

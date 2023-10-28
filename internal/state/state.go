@@ -1,7 +1,7 @@
 package state
 
 import (
-	"git-ui/internal/git"
+	"github.com/ReidMason/git-ui/internal/git"
 )
 
 type State struct {

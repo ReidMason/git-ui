@@ -2,11 +2,12 @@ package ui
 
 import (
 	"fmt"
-	"git-ui/internal/colours"
-	filetree "git-ui/internal/fileTree"
-	"git-ui/internal/git"
-	"git-ui/internal/state"
 	"strings"
+
+	"github.com/ReidMason/git-ui/internal/colours"
+	filetree "github.com/ReidMason/git-ui/internal/fileTree"
+	"github.com/ReidMason/git-ui/internal/git"
+	"github.com/ReidMason/git-ui/internal/state"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"

@@ -1,9 +1,10 @@
 package git
 
 import (
-	"git-ui/internal/colours"
-	filetree "git-ui/internal/fileTree"
 	"sort"
+
+	"github.com/ReidMason/git-ui/internal/colours"
+	filetree "github.com/ReidMason/git-ui/internal/fileTree"
 
 	"github.com/charmbracelet/lipgloss"
 )

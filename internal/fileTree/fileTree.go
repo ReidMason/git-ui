@@ -2,8 +2,9 @@ package filetree
 
 import (
 	"errors"
-	"git-ui/internal/styling"
 	"strings"
+
+	"github.com/ReidMason/git-ui/internal/styling"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
