@@ -15,7 +15,7 @@ func (g MockGitCommandRunner) Stage(filepath string)          {}
 func (g MockGitCommandRunner) Unstage(filepath string)        {}
 func (g MockGitCommandRunner) Commit(commitMessage string)    {}
 func (g MockGitCommandRunner) GetDiff(filepath string) string { return g.diffResponse }
-func (g MockGitCommandRunner) GetStatus() string              { return g.statusResponse }
+func (g MockGitCommandRunner) GetStatus() (string, error)     { return g.statusResponse, nil }
 
 func TestGetDiff(t *testing.T) {
 	testCases := []struct {

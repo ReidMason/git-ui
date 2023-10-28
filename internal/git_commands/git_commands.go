@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"git-ui/internal/utils"
 	"log"
+	"strings"
 )
 
 type GitCommandRunner interface {
@@ -11,7 +12,7 @@ type GitCommandRunner interface {
 	Unstage(filepath string)
 	Commit(commitMessage string)
 	GetDiff(filepath string) string
-	GetStatus() string
+	GetStatus() (string, error)
 }
 
 type GitCommandLine struct{}
@@ -59,12 +60,19 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 	return result
 }
 
-func (g GitCommandLine) GetStatus() string {
-	result, err := utils.RunCommand("git", "status", "-u", "--porcelain=v2", "--branch")
+func getRootDir() (string, error) {
+	rootDir, err := utils.RunCommand("git", "rev-parse", "--show-toplevel")
+	return strings.TrimSpace(rootDir), err
+}
 
+func (g GitCommandLine) GetStatus() (string, error) {
+	rootDirectory, err := getRootDir()
 	if err != nil {
-		log.Fatal("Failed to get git status")
+		log.Println("Failed to get rootDirectory")
+		rootDirectory = "."
 	}
 
-	return result
+	log.Println("git", "-C", rootDirectory, "status", "-u", "--porcelain=v2", "--branch")
+
+	return utils.RunCommand("git", "-C", rootDirectory, "status", "-u", "--porcelain=v2", "--branch")
 }

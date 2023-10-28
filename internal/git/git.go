@@ -81,7 +81,10 @@ func addStatusMetadata(line string, gitStatus GitStatus) GitStatus {
 }
 
 func (g Git) GetStatus() GitStatus {
-	rawStatus := g.commandRunner.GetStatus()
+	rawStatus, err := g.commandRunner.GetStatus()
+	if err != nil {
+		return GitStatus{}
+	}
 	lines := strings.Split(rawStatus, "\n")
 
 	gitStatus := GitStatus{

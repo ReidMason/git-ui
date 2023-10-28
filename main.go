@@ -150,6 +150,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case DiffUpdate:
 		m.lviewport.SetContent(ui.DiffToString(msg.newDiff.Diff1))
 		m.rviewport.SetContent(ui.DiffToString(msg.newDiff.Diff2))
+
 		m.lviewport.GotoTop()
 		m.rviewport.GotoTop()
 	}
