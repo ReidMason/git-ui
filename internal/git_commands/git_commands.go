@@ -15,6 +15,8 @@ type GitCommandRunner interface {
 	GetStatus() (string, error)
 }
 
+const BaseCmd = "git"
+
 type GitCommandLine struct{}
 
 func New() GitCommandLine {
@@ -38,7 +40,7 @@ func (g GitCommandLine) Unstage(filepath string) {
 }
 
 func (g GitCommandLine) Commit(commitMessage string) {
-	_, err := utils.RunCommand("git", "commit", "-m", fmt.Sprintf(`%s`, commitMessage))
+	_, err := utils.RunCommand(BaseCmd, "commit", "-m", fmt.Sprintf(`%s`, commitMessage))
 
 	if err != nil {
 		log.Printf("Got err: %s", err)
@@ -57,7 +59,7 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 }
 
 func getRootDir() string {
-	rootDir, err := utils.RunCommand("git", "rev-parse", "--show-toplevel")
+	rootDir, err := utils.RunCommand(BaseCmd, "rev-parse", "--show-toplevel")
 	if err != nil {
 		return "."
 	}
@@ -68,7 +70,7 @@ func getRootDir() string {
 func runGitCommand(args ...string) (string, error) {
 	rootDirectory := getRootDir()
 	args = append([]string{"-C", rootDirectory}, args...)
-	return utils.RunCommand("git", args...)
+	return utils.RunCommand(BaseCmd, args...)
 }
 
 func (g GitCommandLine) GetStatus() (string, error) {
