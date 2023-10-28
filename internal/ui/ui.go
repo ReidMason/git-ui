@@ -122,7 +122,16 @@ func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	verticalBorderSize := BorderStyle.GetVerticalBorderSize()
 	diffHeight := viewHeight - verticalBorderSize - footerHeight
 
-	diffWidth := int(float32(viewWidth) * 0.4)
+	widthPercentage := float32(0.4)
+	if viewWidth < 40 {
+		widthPercentage = 0
+	} else if viewWidth < 60 {
+		widthPercentage = float32(0.3)
+	} else if viewWidth < 100 {
+		widthPercentage = float32(0.35)
+	}
+
+	diffWidth := int(float32(viewWidth) * widthPercentage)
 
 	return diffWidth, diffHeight
 }
