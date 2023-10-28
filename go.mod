@@ -1,4 +1,4 @@
-module git-ui
+module github.com/ReidMason/git-ui
 
 go 1.21.1
 
