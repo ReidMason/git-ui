@@ -22,7 +22,7 @@ func New() GitCommandLine {
 }
 
 func (g GitCommandLine) Stage(filepath string) {
-	_, err := utils.RunCommand("git", "add", "--", fmt.Sprintf(`%s`, filepath))
+	_, err := runGitCommand("add", "--", fmt.Sprintf(`%s`, filepath))
 
 	if err != nil {
 		log.Printf("Got err: %s", err)
@@ -30,7 +30,7 @@ func (g GitCommandLine) Stage(filepath string) {
 }
 
 func (g GitCommandLine) Unstage(filepath string) {
-	_, err := utils.RunCommand("git", "reset", "HEAD", "--", fmt.Sprintf(`%s`, filepath))
+	_, err := runGitCommand("reset", "HEAD", "--", fmt.Sprintf(`%s`, filepath))
 
 	if err != nil {
 		log.Printf("Got err: %s", err)
