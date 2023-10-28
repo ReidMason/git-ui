@@ -1,6 +1,6 @@
 module github.com/ReidMason/git-ui
 
-go 1.21.1
+go 1.21.3
 
 require (
 	github.com/charmbracelet/bubbles v0.16.1
