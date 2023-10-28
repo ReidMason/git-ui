@@ -16,12 +16,15 @@ func TrimFirstRune(s string) (rune, string) {
 func RunCommand(command string, args ...string) (string, error) {
 	cmd := exec.Command(command, args...)
 
+	var stdErr bytes.Buffer
+	cmd.Stderr = &stdErr
+
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
 
 	if err != nil {
-		return "", err
+		return stdErr.String(), err
 	}
 
 	return strings.ReplaceAll(out.String(), "\t", "   "), nil
