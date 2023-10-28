@@ -117,15 +117,14 @@ func RenderFileTree(filetree filetree.FileTree, width, height int) string {
 	return style.Render(fileTreeString)
 }
 
-func getColumnWidth(viewWidth int) int {
-	return viewWidth / 12
-}
-
 func GetDiffDimensions(viewWidth, viewHeight int) (int, int) {
 	footerHeight := 3
 	verticalBorderSize := BorderStyle.GetVerticalBorderSize()
 	diffHeight := viewHeight - verticalBorderSize - footerHeight
-	return getColumnWidth(viewWidth) * 5, diffHeight
+
+	diffWidth := int(float32(viewWidth) * 0.4)
+
+	return diffWidth, diffHeight
 }
 
 func GetFooterTextContent(state state.State) string {
