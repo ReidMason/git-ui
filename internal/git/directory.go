@@ -69,7 +69,7 @@ func (d Directory) GetDisplay() string {
 
 func (d *Directory) Sort() {
 	sort.Slice(d.Files, func(i, j int) bool {
-		return d.Files[i].Name < d.Files[j].Name
+		return d.Files[i].name < d.Files[j].name
 	})
 
 	for _, subDirectory := range d.Directories {
@@ -119,7 +119,8 @@ func (d Directory) GetStagedStatus() StagedStatus {
 
 func (d Directory) IsDirectory() bool { return true }
 
-func (d Directory) GetFilePath() string { return d.Filepath }
+func (d Directory) GetFilePath() string    { return d.Filepath }
+func (d Directory) GetFilePaths() []string { return []string{d.Filepath} }
 func (d Directory) GetFirstFilePath() string {
 	if len(d.Directories) > 0 {
 		return d.Directories[0].Filepath

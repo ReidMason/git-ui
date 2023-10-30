@@ -110,10 +110,10 @@ func (g Git) GetStatus() GitStatus {
 		} else if changeType == untracked {
 			file := parseUntrackedStatusLine(lineString)
 			addFile(gitStatus.Directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
+		} else if changeType == copied {
+			file := parseCopiedStatusLine(lineString)
+			addFile(gitStatus.Directory, strings.Split(file.Dirpath, "/"), make([]string, 0), file)
 		}
-		//   else if changeType == copied {
-		//
-		// } else if changeType == unmerged {
 	}
 
 	gitStatus.Directory.Sort()
@@ -121,17 +121,29 @@ func (g Git) GetStatus() GitStatus {
 	return gitStatus
 }
 
+func parseCopiedStatusLine(line string) File {
+	sections := strings.Split(line, " ")
+	statusIndicators := []rune(sections[0])
+
+	secondName := "?"
+	if len(sections) >= 12 {
+		secondName = sections[11]
+	}
+
+	return newFile(sections[8], statusIndicators[0], statusIndicators[1], secondName)
+}
+
 func parseChangedStatusLine(line string) File {
 	sections := strings.Split(line, " ")
 
 	statusIndicators := []rune(sections[0])
 
-	return newFile(sections[7], statusIndicators[0], statusIndicators[1])
+	return newFile(sections[7], statusIndicators[0], statusIndicators[1], "")
 }
 
 func parseUntrackedStatusLine(line string) File {
 	filepath := strings.TrimPrefix(line, "? ")
-	return newFile(filepath, '.', 'U')
+	return newFile(filepath, '.', 'U', "")
 }
 
 func (g Git) Stage(filepath string)       { g.commandRunner.Stage(filepath) }

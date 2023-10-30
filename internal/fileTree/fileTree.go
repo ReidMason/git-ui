@@ -66,6 +66,7 @@ type FileTreeItem interface {
 	GetDisplay() string
 	IsDirectory() bool
 	GetFilePath() string
+	GetFilePaths() []string
 	GetDirectories() []FileTreeItem
 	GetFiles() []FileTreeItem
 }

@@ -96,7 +96,9 @@ func (m Model) toggleStageFile() tea.Cmd {
 		if stage {
 			m.git.Stage(filepath)
 		} else {
-			m.git.Unstage(filepath)
+			for _, fp := range selectedItem.GetFilePaths() {
+				m.git.Unstage(fp)
+			}
 		}
 
 		return GitStatusUpdate{newGitStatus: m.git.GetStatus(), oldFilepath: filepath}

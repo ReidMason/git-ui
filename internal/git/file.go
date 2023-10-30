@@ -20,7 +20,8 @@ var (
 )
 
 type File struct {
-	Name           string
+	name           string
+	secondName     string
 	Parent         *Directory
 	Dirpath        string
 	IndexStatus    rune
@@ -35,7 +36,7 @@ func (f File) GetDisplay() string {
 		indexStatus = UnstagedStyle.Render(indexStatus)
 	}
 
-	worktreeStatusAndName := fmt.Sprintf("%s %s", string(f.WorktreeStatus), f.Name)
+	worktreeStatusAndName := fmt.Sprintf("%s %s", string(f.WorktreeStatus), f.getDisplayName())
 	if f.WorktreeStatus == '.' {
 		worktreeStatusAndName = StagedStyle.Render(worktreeStatusAndName)
 	} else {
@@ -47,17 +48,38 @@ func (f File) GetDisplay() string {
 	return lipgloss.JoinHorizontal(0, indexStatus, worktreeStatusAndName)
 }
 
-func (f File) GetFilePath() string                     { return filepath.Join(f.Dirpath, f.Name) }
+func (f File) getDisplayName() string {
+	if f.secondName != "" {
+		return fmt.Sprintf("%s -> %s", f.secondName, f.name)
+	}
+
+	return f.name
+}
+
+func (f File) GetFilePath() string { return filepath.Join(f.Dirpath, f.name) }
+func (f File) GetFilePaths() []string {
+	filepaths := []string{filepath.Join(f.Dirpath, f.name)}
+	if f.secondName != "" {
+		filepaths = append(filepaths, filepath.Join(f.Dirpath, f.secondName))
+	}
+	return filepaths
+}
 func (f File) GetDirectories() []filetree.FileTreeItem { return []filetree.FileTreeItem{} }
 func (f File) GetFiles() []filetree.FileTreeItem       { return []filetree.FileTreeItem{} }
 func (f File) IsDirectory() bool                       { return false }
 func (f File) IsStaged() bool                          { return f.WorktreeStatus == '.' }
 
-func newFile(filePath string, indexStatus, workTreeStatus rune) File {
+func newFile(filePath string, indexStatus, workTreeStatus rune, secondName string) File {
 	dirpath, filename := filepath.Split(filePath)
 	dirpath = filepath.Clean(dirpath)
 
-	return File{Name: filename, Dirpath: dirpath, IndexStatus: indexStatus, WorktreeStatus: workTreeStatus}
+	return File{
+		name:           filename,
+		Dirpath:        dirpath,
+		IndexStatus:    indexStatus,
+		WorktreeStatus: workTreeStatus,
+		secondName:     secondName,
+	}
 }
 
 func addFile(directory *Directory, dirpath []string, visitedDirs []string, newFile File) {

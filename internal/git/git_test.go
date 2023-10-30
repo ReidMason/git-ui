@@ -165,7 +165,7 @@ func TestGetStatus(t *testing.T) {
 				}
 
 				file := File{
-					Name:           "main.go",
+					name:           "main.go",
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    'M',
@@ -211,7 +211,7 @@ func TestGetStatus(t *testing.T) {
 				directory.Directories = append(directory.Directories, &internalDir)
 
 				lib := File{
-					Name:           "lib.go",
+					name:           "lib.go",
 					Dirpath:        "Directory/Internal",
 					Parent:         &internalDir,
 					IndexStatus:    'M',
@@ -220,7 +220,7 @@ func TestGetStatus(t *testing.T) {
 				internalDir.Files = append(internalDir.Files, lib)
 
 				file := File{
-					Name:           "main.go",
+					name:           "main.go",
 					Dirpath:        "Directory/Internal",
 					Parent:         &internalDir,
 					IndexStatus:    '.',
@@ -259,7 +259,7 @@ func TestGetStatus(t *testing.T) {
 				}
 
 				file := File{
-					Name:           "git-ui",
+					name:           "git-ui",
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    '.',
@@ -289,7 +289,7 @@ func TestGetStatus(t *testing.T) {
 				}
 
 				gitUiFile := File{
-					Name:           "git-ui",
+					name:           "git-ui",
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    '.',
@@ -298,7 +298,7 @@ func TestGetStatus(t *testing.T) {
 				rootDir.Files = append(rootDir.Files, gitUiFile)
 
 				readmeFile := File{
-					Name:           "readme.md",
+					name:           "readme.md",
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    '.',
@@ -307,7 +307,7 @@ func TestGetStatus(t *testing.T) {
 				rootDir.Files = append(rootDir.Files, readmeFile)
 
 				trackmeFile := File{
-					Name:           "trackme.md",
+					name:           "trackme.md",
 					Dirpath:        ".",
 					Parent:         &rootDir,
 					IndexStatus:    '.',
@@ -318,6 +318,43 @@ func TestGetStatus(t *testing.T) {
 				return GitStatus{
 					Directory: &rootDir,
 					Head:      "testing",
+					Upstream:  " ",
+				}
+			}(),
+		},
+		{
+			name: "Renamed file",
+			rawStatus: `1 .M N... 100644 100644 100644 529f0a978512c8ad0f7b705bc7c2e27922e14454 529f0a978512c8ad0f7b705bc7c2e27922e14454 readme.md
+2 R. N... 100644 100644 100644 b3d7df4c0813ea70c043f4415e1043a668720093 2e286f370a66d2bec922ae5dc6907bd1ea53ab3d R78 test.md   test`,
+			expected: func() GitStatus {
+				rootDir := Directory{
+					Name:   "Root",
+					Parent: nil,
+					Files:  []File{},
+				}
+
+				readmeFile := File{
+					name:           "readme.md",
+					Dirpath:        ".",
+					Parent:         &rootDir,
+					IndexStatus:    '.',
+					WorktreeStatus: 'M',
+				}
+				rootDir.Files = append(rootDir.Files, readmeFile)
+
+				testFile := File{
+					name:           "test.md",
+					secondName:     "test",
+					Dirpath:        ".",
+					Parent:         &rootDir,
+					IndexStatus:    'R',
+					WorktreeStatus: '.',
+				}
+				rootDir.Files = append(rootDir.Files, testFile)
+
+				return GitStatus{
+					Directory: &rootDir,
+					Head:      "",
 					Upstream:  " ",
 				}
 			}(),
@@ -380,23 +417,27 @@ func checkDir(directory, expectedDirectory *Directory, t *testing.T) {
 }
 
 func checkFile(file, expectedFile File, t *testing.T) {
-	if file.Name != expectedFile.Name {
-		t.Fatalf("Wrong name for file. Expected: '%s' Got: '%s'", expectedFile.Name, file.Name)
+	if file.name != expectedFile.name {
+		t.Fatalf("Wrong name for file. Expected: '%s' Got: '%s'", expectedFile.name, file.name)
+	}
+
+	if file.secondName != expectedFile.secondName {
+		t.Fatalf("Wrong second name for file. Expected: '%s' Got: '%s'", expectedFile.secondName, file.secondName)
 	}
 
 	if file.Parent.Name != expectedFile.Parent.Name {
-		t.Fatalf("Wrong parent name for file '%s'. Expected: '%s' Got: '%s'", file.Name, expectedFile.Parent.Name, file.Parent.Name)
+		t.Fatalf("Wrong parent name for file '%s'. Expected: '%s' Got: '%s'", file.name, expectedFile.Parent.Name, file.Parent.Name)
 	}
 
 	if file.Dirpath != expectedFile.Dirpath {
-		t.Fatalf("Wrong dirpath for file '%s'. Expected: '%s' Got: '%s'", file.Name, expectedFile.Dirpath, file.Dirpath)
+		t.Fatalf("Wrong dirpath for file '%s'. Expected: '%s' Got: '%s'", file.name, expectedFile.Dirpath, file.Dirpath)
 	}
 
 	if file.IndexStatus != expectedFile.IndexStatus {
-		t.Fatalf("Wrong index status for file '%s'. Expected: '%d' Got: '%d'", file.Name, expectedFile.IndexStatus, file.IndexStatus)
+		t.Fatalf("Wrong index status for file '%s'. Expected: '%s' Got: '%s'", file.name, string(expectedFile.IndexStatus), string(file.IndexStatus))
 	}
 
 	if file.WorktreeStatus != expectedFile.WorktreeStatus {
-		t.Fatalf("Wrong work tree status for file '%s'. Expected: '%s' Got: '%s'", file.Name, string(expectedFile.WorktreeStatus), string(file.WorktreeStatus))
+		t.Fatalf("Wrong work tree status for file '%s'. Expected: '%s' Got: '%s'", file.name, string(expectedFile.WorktreeStatus), string(file.WorktreeStatus))
 	}
 }
