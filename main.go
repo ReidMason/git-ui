@@ -266,7 +266,12 @@ func (m Model) getTextInputWidth() int {
 func (m Model) View() string {
 	leftDiff := m.lviewport.View()
 	rightDiff := m.rviewport.View()
-	divider := strings.Repeat("│\n", lipgloss.Height(leftDiff))
+
+	divider := ""
+	if len(strings.TrimSpace(leftDiff)) > 0 {
+		divider = strings.Repeat("│\n", lipgloss.Height(leftDiff))
+	}
+
 	diffsStyle := ui.GetDiffsDividerStyle(m.state)
 	divider = diffsStyle.Render(strings.TrimSuffix(divider, "\n"))
 	diffs := lipgloss.JoinHorizontal(0, leftDiff, divider, rightDiff)
