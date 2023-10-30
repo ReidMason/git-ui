@@ -86,7 +86,7 @@ func New(directory FileTreeItem) FileTree {
 }
 
 func (ft FileTree) UpdateDirectoryTree(directory FileTreeItem, selectedFilepath string) FileTree {
-	cursorIndex := ft.buildTree(directory, selectedFilepath)
+	cursorIndex := ft.buildTree(directory, selectedFilepath, ft.cursorIndex)
 	ft.setCursorIndex(cursorIndex)
 	return ft
 }
@@ -185,7 +185,7 @@ func (ft FileTree) Render() string {
 	return strings.Join(ft.buildFileTreeString(), "\n")
 }
 
-func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string) int {
+func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string, currentCursorIndex int) int {
 	selectedIndex := 0
 	ft.root = newDirectory(nil, directory)
 	ft.fileTreeItems = nil
@@ -200,12 +200,15 @@ func (ft *FileTree) buildTree(directory FileTreeItem, selectedFilepath string) i
 	for _, file := range directory.GetFiles() {
 		if file.GetFilePath() == selectedFilepath {
 			selectedIndex = len(ft.fileTreeItems)
-
 		}
 
 		newFile := File{parent: &ft.root, item: file}
 		ft.fileTreeItems = append(ft.fileTreeItems, &newFile)
 		ft.root.files = append(ft.root.files, &newFile)
+	}
+
+	if selectedIndex == 0 {
+		return min(max(0, currentCursorIndex), len(ft.fileTreeItems)-1)
 	}
 
 	return selectedIndex
