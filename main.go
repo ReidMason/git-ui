@@ -192,7 +192,9 @@ func (m Model) handleWindowSizeMsg(msg tea.WindowSizeMsg) (Model, tea.Cmd) {
 func (m Model) handleKeypress(msg tea.KeyMsg) (Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
-		return m, tea.Quit
+		if !m.textInput.Focused() {
+			return m, tea.Quit
+		}
 	case "a":
 		if m.fileTree.Focused() {
 			return m, func() tea.Msg {
