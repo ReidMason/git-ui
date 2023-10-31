@@ -90,7 +90,7 @@ func DiffToString(difflines []git.DiffLine) string {
 			gutter += strings.Repeat(" ", gutterNumberPadding)
 		}
 
-		content += gutter + buildLineSymbol(line) + GutterNumber.Render("│ ") + styleDiffLine(line) + "\n"
+		content += gutter + buildLineSymbol(line) + GutterNumber.Render("│") + styleDiffLine(line) + "\n"
 	}
 
 	return content
