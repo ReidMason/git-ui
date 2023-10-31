@@ -143,7 +143,7 @@ func parseChangedStatusLine(line string) File {
 
 func parseUntrackedStatusLine(line string) File {
 	filepath := strings.TrimPrefix(line, "? ")
-	return newFile(filepath, '.', 'U', "")
+	return newFile(filepath, '?', '?', "")
 }
 
 func (g Git) Stage(filepath string)       { g.commandRunner.Stage(filepath) }
