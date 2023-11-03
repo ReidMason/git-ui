@@ -72,6 +72,10 @@ func (d *Directory) Sort() {
 		return d.Files[i].name < d.Files[j].name
 	})
 
+	sort.Slice(d.Directories, func(i, j int) bool {
+		return d.Directories[i].Name < d.Directories[j].Name
+	})
+
 	for _, subDirectory := range d.Directories {
 		subDirectory.Sort()
 	}
