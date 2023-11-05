@@ -262,8 +262,8 @@ func TestGetStatus(t *testing.T) {
 					name:           "git-ui",
 					Dirpath:        ".",
 					Parent:         &rootDir,
-					IndexStatus:    '.',
-					WorktreeStatus: 'U',
+					IndexStatus:    '?',
+					WorktreeStatus: '?',
 				}
 				rootDir.Files = append(rootDir.Files, file)
 
@@ -292,8 +292,8 @@ func TestGetStatus(t *testing.T) {
 					name:           "git-ui",
 					Dirpath:        ".",
 					Parent:         &rootDir,
-					IndexStatus:    '.',
-					WorktreeStatus: 'U',
+					IndexStatus:    '?',
+					WorktreeStatus: '?',
 				}
 				rootDir.Files = append(rootDir.Files, gitUiFile)
 
@@ -310,8 +310,8 @@ func TestGetStatus(t *testing.T) {
 					name:           "trackme.md",
 					Dirpath:        ".",
 					Parent:         &rootDir,
-					IndexStatus:    '.',
-					WorktreeStatus: 'U',
+					IndexStatus:    '?',
+					WorktreeStatus: '?',
 				}
 				rootDir.Files = append(rootDir.Files, trackmeFile)
 
