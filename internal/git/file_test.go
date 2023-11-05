@@ -1,6 +1,9 @@
 package git
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestDisplayName(t *testing.T) {
 	testCases := []struct {
@@ -44,7 +47,7 @@ func TestDisplayName(t *testing.T) {
 	}
 }
 
-func TestGetFilePaths(t *testing.T) {
+func TestGetFilePath(t *testing.T) {
 	testCases := []struct {
 		name     string
 		expected string
@@ -106,6 +109,72 @@ func TestGetFilePaths(t *testing.T) {
 
 		if output != tc.expected {
 			t.Fatalf("Failed to get filepath. Test %s expected '%s' got '%s'", tc.name, tc.expected, output)
+		}
+	}
+}
+
+func TestGetFilePaths(t *testing.T) {
+	testCases := []struct {
+		name     string
+		expected []string
+		file     File
+	}{
+		{
+			name: "Single file name",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "",
+				IndexStatus:    '.',
+				WorktreeStatus: '.',
+			},
+			expected: []string{"file.md", "oldfile.md"},
+		},
+		{
+			name: "Dirpath name display",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "directory/files",
+				IndexStatus:    '.',
+				WorktreeStatus: '.',
+			},
+			expected: []string{"directory/files/file.md", "directory/files/oldfile.md"},
+		},
+		{
+			name: "Dirpath name display trailing slash",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "directory/files/",
+				IndexStatus:    '.',
+				WorktreeStatus: '.',
+			},
+			expected: []string{"directory/files/file.md", "directory/files/oldfile.md"},
+		},
+		{
+			name: "Dirpath name display leading slash",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "/directory/files/",
+				IndexStatus:    '.',
+				WorktreeStatus: '.',
+			},
+			expected: []string{"/directory/files/file.md", "/directory/files/oldfile.md"},
+		},
+	}
+
+	t.Parallel()
+	for _, tc := range testCases {
+		output := tc.file.GetFilePaths()
+
+		if !reflect.DeepEqual(tc.expected, output) {
+			t.Fatalf("Failed to get filepaths. Test %s expected '%s' got '%s'", tc.name, tc.expected, output)
 		}
 	}
 }
