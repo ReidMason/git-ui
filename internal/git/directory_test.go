@@ -95,3 +95,69 @@ func TestGetStagedStatus(t *testing.T) {
 		}
 	}
 }
+
+func TestSort(t *testing.T) {
+	testCases := []struct {
+		name          string
+		directory     Directory
+		expectedDirs  []string
+		expectedFiles []string
+	}{
+		{
+			name: "Sort directories",
+			directory: func() Directory {
+				directory := Directory{}
+
+				bSubDirectory := Directory{
+					Name:  "bSubDirectory",
+					Files: []File{},
+				}
+				directory.Directories = append(directory.Directories, &bSubDirectory)
+
+				aSubDirectory := Directory{
+					Name:  "aSubDirectory",
+					Files: []File{},
+				}
+				directory.Directories = append(directory.Directories, &aSubDirectory)
+
+				return directory
+			}(),
+			expectedDirs:  []string{"aSubDirectory", "bSubDirectory"},
+			expectedFiles: []string{},
+		},
+		{
+			name: "Sort files",
+			directory: func() Directory {
+				directory := Directory{
+					Files: []File{
+						{name: "bFile"},
+						{name: "aFile"},
+					},
+				}
+
+				return directory
+			}(),
+			expectedDirs:  []string{},
+			expectedFiles: []string{"aFile", "bFile"},
+		},
+	}
+
+	t.Parallel()
+	for _, tc := range testCases {
+		tc := tc
+
+		tc.directory.Sort()
+
+		for i, subDir := range tc.expectedDirs {
+			if subDir != tc.directory.Directories[i].Name {
+				t.Fatalf("Got wrong directory sort index %d. Test %s expected '%s' got '%s'", i, tc.name, subDir, tc.directory.Directories[i].Name)
+			}
+		}
+
+		for i, file := range tc.expectedFiles {
+			if file != tc.directory.Files[i].name {
+				t.Fatalf("Got wrong file sort index %d. Test %s expected '%s' got '%s'", i, tc.name, file, tc.directory.Files[i].name)
+			}
+		}
+	}
+}
