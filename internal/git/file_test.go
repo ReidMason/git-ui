@@ -178,3 +178,57 @@ func TestGetFilePaths(t *testing.T) {
 		}
 	}
 }
+
+func TestIsStaged(t *testing.T) {
+	testCases := []struct {
+		name     string
+		expected bool
+		file     File
+	}{
+		{
+			name: "Fully staged",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "",
+				IndexStatus:    '.',
+				WorktreeStatus: '.',
+			},
+			expected: true,
+		},
+		{
+			name: "Unstaged",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "",
+				IndexStatus:    '.',
+				WorktreeStatus: 'M',
+			},
+			expected: false,
+		},
+		{
+			name: "Partially staged",
+			file: File{
+				name:           "file.md",
+				secondName:     "oldfile.md",
+				Parent:         nil,
+				Dirpath:        "",
+				IndexStatus:    'M',
+				WorktreeStatus: 'M',
+			},
+			expected: false,
+		},
+	}
+
+	t.Parallel()
+	for _, tc := range testCases {
+		output := tc.file.IsStaged()
+
+		if tc.expected != output {
+			t.Fatalf("Got wrong stage status. Test %s expected '%v' got '%v'", tc.name, tc.expected, output)
+		}
+	}
+}
