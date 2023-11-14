@@ -35,7 +35,7 @@ func getRootDirectory() string {
 		return args[1]
 	}
 
-	return gitcommands.GetRootDir()
+	return "."
 }
 
 func initModel() Model {

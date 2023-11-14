@@ -3,6 +3,7 @@ package gitcommands
 import (
 	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
 
 	"github.com/ReidMason/git-ui/internal/utils"
@@ -23,9 +24,15 @@ type GitCommandLine struct {
 }
 
 func New(rootDir string) GitCommandLine {
-	return GitCommandLine{
+	dir := filepath.Dir(rootDir)
+	rootDir = filepath.Dir(dir)
+
+	g := GitCommandLine{
 		rootDir: rootDir,
 	}
+	g.rootDir = g.getRootDir()
+
+	return g
 }
 
 func (g GitCommandLine) Stage(filepath string) {
@@ -73,7 +80,7 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 }
 
 func (g GitCommandLine) IsGitDir() bool {
-	_, err := g.runGitCommand("rev-parse", "--show-toplevel")
+	_, err := g.runGitCommand("rev-parse")
 	return err == nil
 }
 
@@ -81,8 +88,8 @@ func (g GitCommandLine) RootDir() string {
 	return g.rootDir
 }
 
-func GetRootDir() string {
-	rootDir, err := utils.RunCommand(BaseCmd, "rev-parse", "--show-toplevel")
+func (g GitCommandLine) getRootDir() string {
+	rootDir, err := g.runGitCommand("rev-parse", "--show-toplevel")
 	if err != nil {
 		return "."
 	}
