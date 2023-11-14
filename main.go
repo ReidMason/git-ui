@@ -29,8 +29,17 @@ type Model struct {
 	ready     bool
 }
 
+func getRootDirectory() string {
+	args := os.Args
+	if len(args) > 1 {
+		return args[1]
+	}
+
+	return gitcommands.GetRootDir()
+}
+
 func initModel() Model {
-	gitCommands := gitcommands.New()
+	gitCommands := gitcommands.New(getRootDirectory())
 
 	ti := textinput.New()
 	ti.Placeholder = "Commit message"

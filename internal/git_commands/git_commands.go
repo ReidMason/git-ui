@@ -18,14 +18,18 @@ type GitCommandRunner interface {
 
 const BaseCmd = "git"
 
-type GitCommandLine struct{}
+type GitCommandLine struct {
+	rootDir string
+}
 
-func New() GitCommandLine {
-	return GitCommandLine{}
+func New(rootDir string) GitCommandLine {
+	return GitCommandLine{
+		rootDir: rootDir,
+	}
 }
 
 func (g GitCommandLine) Stage(filepath string) {
-	_, err := runGitCommand("add", "--", fmt.Sprintf(`%s`, filepath))
+	_, err := g.runGitCommand("add", "--", fmt.Sprintf(`%s`, filepath))
 
 	if err != nil {
 		log.Printf("Got err: %s", err)
@@ -33,7 +37,7 @@ func (g GitCommandLine) Stage(filepath string) {
 }
 
 func (g GitCommandLine) Unstage(filepath string) {
-	_, err := runGitCommand("reset", "HEAD", "--", fmt.Sprintf(`%s`, filepath))
+	_, err := g.runGitCommand("reset", "HEAD", "--", fmt.Sprintf(`%s`, filepath))
 
 	if err != nil {
 		log.Printf("Got err: %s", err)
@@ -41,7 +45,7 @@ func (g GitCommandLine) Unstage(filepath string) {
 }
 
 func (g GitCommandLine) Commit(commitMessage string) {
-	_, err := utils.RunCommand(BaseCmd, "commit", "-m", fmt.Sprintf(`%s`, commitMessage))
+	_, err := g.runGitCommand("commit", "-m", fmt.Sprintf(`%s`, commitMessage))
 
 	if err != nil {
 		log.Printf("Got err: %s", err)
@@ -49,16 +53,16 @@ func (g GitCommandLine) Commit(commitMessage string) {
 }
 
 func (g GitCommandLine) GetDiff(filepath string) string {
-	result, err := runGitCommand("diff", "--no-ext-diff", "-U1000", "--", filepath)
+	result, err := g.runGitCommand("diff", "--no-ext-diff", "-U1000", "--", filepath)
 
 	// If we got a blank result the file might be staged so we use cached
 	if err == nil && result == "" {
-		result, err = runGitCommand("diff", "--no-ext-diff", "--cached", "-U1000", "--", filepath)
+		result, err = g.runGitCommand("diff", "--no-ext-diff", "--cached", "-U1000", "--", filepath)
 	}
 
 	// If we got a blank result the file probably isn't indexed so compare it to /dev/null
 	if err == nil && result == "" {
-		result, err = runGitCommand("diff", "--no-ext-diff", "-U1000", "--", "/dev/null", filepath)
+		result, err = g.runGitCommand("diff", "--no-ext-diff", "-U1000", "--", "/dev/null", filepath)
 	}
 
 	if err != nil {
@@ -68,7 +72,7 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 	return result
 }
 
-func getRootDir() string {
+func GetRootDir() string {
 	rootDir, err := utils.RunCommand(BaseCmd, "rev-parse", "--show-toplevel")
 	if err != nil {
 		return "."
@@ -77,12 +81,11 @@ func getRootDir() string {
 	return strings.TrimSpace(rootDir)
 }
 
-func runGitCommand(args ...string) (string, error) {
-	rootDirectory := getRootDir()
-	args = append([]string{"-C", rootDirectory}, args...)
+func (g GitCommandLine) runGitCommand(args ...string) (string, error) {
+	args = append([]string{"-C", g.rootDir}, args...)
 	return utils.RunCommand(BaseCmd, args...)
 }
 
 func (g GitCommandLine) GetStatus() (string, error) {
-	return runGitCommand("status", "-u", "--porcelain=v2", "--branch")
+	return g.runGitCommand("status", "-u", "--porcelain=v2", "--branch")
 }
