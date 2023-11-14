@@ -40,6 +40,10 @@ func getRootDirectory() string {
 
 func initModel() Model {
 	gitCommands := gitcommands.New(getRootDirectory())
+	if !gitCommands.IsGitDir() {
+		fmt.Println("Not a valid git directory")
+		os.Exit(1)
+	}
 
 	ti := textinput.New()
 	ti.Placeholder = "Commit message"

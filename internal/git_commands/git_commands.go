@@ -72,6 +72,15 @@ func (g GitCommandLine) GetDiff(filepath string) string {
 	return result
 }
 
+func (g GitCommandLine) IsGitDir() bool {
+	_, err := g.runGitCommand("rev-parse", "--show-toplevel")
+	return err == nil
+}
+
+func (g GitCommandLine) RootDir() string {
+	return g.rootDir
+}
+
 func GetRootDir() string {
 	rootDir, err := utils.RunCommand(BaseCmd, "rev-parse", "--show-toplevel")
 	if err != nil {
